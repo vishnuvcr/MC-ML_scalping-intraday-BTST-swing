@@ -219,7 +219,7 @@ def load_tej(root):
 def lagged_basis(tej):
     if tej.empty: return pd.DataFrame()
     n=tej[tej.side=="nse"].copy(); b=tej[tej.side=="bse"].copy()
-    key="isin" if "isin" in n.columns and "isin" in b.columns and n.isin.notna().any() and b.isin.notna().any() else "symbol"
+    key="symbol"
     n["join_key"]=n[key].astype(str).str.upper(); b["join_key"]=b[key].astype(str).str.upper()
     m=n[["date","join_key","symbol","close"]].rename(columns={"symbol":"nse_symbol","close":"nse_close"})
     z=b[["date","join_key","close"]].rename(columns={"close":"bse_close"})
@@ -309,6 +309,8 @@ def main():
         except Exception as e:
             errors.append({"symbol":symbol,"error":repr(e)})
     panel=pd.DataFrame(panel_rows)
+    if not panel.empty:
+        panel["signal_date"]=pd.to_datetime(panel["signal_date"]).dt.normalize()
     if args.tej_root and not panel.empty:
         tej=load_tej(args.tej_root)
         basis=lagged_basis(tej)
