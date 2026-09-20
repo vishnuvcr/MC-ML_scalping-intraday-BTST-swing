@@ -3,9 +3,9 @@
 Research project studying whether Monte Carlo methods can improve the statistical validation and/or decision support of stock-trading systems across scalping, intraday, BTST and swing horizons.
 
 ## Current status
-**Phase 8 public-data expansion in progress — no universally robust strategy has been established.**
+**Phase 8 cross-market replication active — no universally robust strategy has been established.**
 
-Public Kaggle, Hugging Face, TejHQ and GitHub sources are now part of the protocol. The corrected interim 8-symbol screen is negative for the frozen EMA framework at 5 bps/leg; the independent 214-symbol 1-minute + TejHQ daily run is configured for cached GitHub Actions execution.
+Phase 8 broadens the data audit to Kaggle, Hugging Face, TejHQ and a 214-symbol NSE F&O 1-minute release. A corrected 8-symbol interim replication is already negative for the frozen EMA framework at 5 bps/leg; the independent 214-symbol/TejHQ run is configured for cached GitHub Actions execution.
 
 The empirical gate was reopened with a secondary public OHLCV dataset. The research then ran a finite strategy screen with transaction costs, brokerage assumptions and Monte Carlo gating. The screen was closed after the pre-specified candidate families failed to produce a robust positive strategy across all four horizons.
 
@@ -36,8 +36,8 @@ No single consistent, cost-aware and out-of-sample-robust strategy has been esta
 - `.github/workflows/phase-0-governance.yml` through `.github/workflows/phase-6-final-synthesis.yml`
 
 
-## Phase 8 public-data expansion
-- `docs/PHASE8_PUBLIC_DATA_PLAN.md` (phase-8-public-data-expansion)
+## Phase 8 files
+- `docs/PHASE8_PUBLIC_DATA_PLAN.md`
 - `docs/DATA_SOURCE_REGISTRY_PHASE8.md`
 - `docs/PHASE8_RESULTS.md`
 - `docs/ERROR_LOG_PHASE8.md`
@@ -45,7 +45,19 @@ No single consistent, cost-aware and out-of-sample-robust strategy has been esta
 - `.github/workflows/phase-8-public-data-expansion.yml`
 
 
+## Phase 8 cross-market replication
+
+A corrected independent historical-NSE panel and a 19-symbol BSE cross-market panel were added without changing the frozen EMA20/21 + Monte-Carlo gate. The accessible BSE 2025 test was negative at 5 bps/leg for both BTST (median -2.94%, 4/19 positive, median PF 0.13) and swing (median -3.28%, 6/19 positive, median PF 0.45). The corrected GitHub Actions rerun is the authoritative aggregate and is preserved as an artifact rather than treating ad-hoc calculations as final.
+
+Files: [cross-market plan](docs/PHASE8_CROSSMARKET_REPLICATION.md), [script](scripts/phase8_crossmarket_replication.py), [workflow](.github/workflows/phase-8-crossmarket-replication.yml), [cross-market error log](docs/ERROR_LOG_PHASE8_CROSSMARKET.md).
+
 ## Latest Phase 8 cross-market update
 A corrected independent historical-NSE panel (20 project symbols, test 2019-2022) and a 19-symbol BSE panel (test 2025) are now part of Phase 8 validation. The historical-NSE preliminary corrected aggregate at 5 bps/leg remains negative for both frozen daily horizons: BTST mean -4.97%, median -4.61%, 4/19 positive, median PF 0.50; swing mean -3.69%, median -7.51%, 7/19 positive, median PF 0.62. The BSE panel is also negative in 2025 at 5 bps/leg: BTST mean -2.55%, median -2.94%, 4/19 positive, median PF 0.13; swing mean -3.36%, median -3.28%, 6/19 positive, median PF 0.45.
 
 These are public-data replication results, not exchange-grade live-trading evidence. The reproducible GitHub Actions workflow is the final artifact path; no claim is made that its runner artifact has executed until it is observable.
+
+## Phase 8 final synthesis
+
+**Phase 8 is complete under the finite public-data protocol.** The historical NSE and independent BSE daily replications both failed the robustness gate at 5 bps/leg for the frozen BTST/swing EMA framework. The strongest short-horizon result remains the TCS 15-minute intraday candidate, which is not live-validated or universal.
+
+Final artifacts: [final manuscript](manuscript/FINAL_RESEARCH_REPORT.md), [evidence gate](docs/FINAL_EVIDENCE_GATE_PHASE8.md), [final error log](docs/ERROR_LOG_PHASE8_FINAL.md), [phase status](docs/STATUS_PHASES.md), and [manual final-synthesis workflow](.github/workflows/phase-8-final-synthesis.yml).
