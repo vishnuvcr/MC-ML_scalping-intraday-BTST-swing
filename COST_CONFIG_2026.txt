@@ -1,0 +1,16 @@
+status=provisional
+as_of=2026-09-20
+broker=Paytm Money
+brokerage_per_order_inr=20
+brokerage_verification=provisional_use_current_account_terms_or_calculator
+stt_delivery_buy=0.001
+stt_delivery_sell=0.001
+stt_intraday_sell=0.00025
+stamp_delivery_buy=0.00015
+stamp_intraday_buy=0.00003
+sebi_turnover=0.000001
+nse_cash_transaction_each_side=0.0000307
+gst_rate=0.18
+spread_bps_per_leg=0
+slippage_bps_per_leg=0
+delivery_dp_charge=0
