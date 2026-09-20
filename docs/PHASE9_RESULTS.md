@@ -1,6 +1,6 @@
 # Phase 9 Results
 
-Status: **EXECUTION IN PROGRESS**
+Status: **CORRECTED ENGINE — RERUN REQUIRED**
 
 ## Scope
 
@@ -61,3 +61,8 @@ A factor or stock-selection condition is not promoted because it has a high retu
 ## 2026-only Nifty500 forward path
 
 The 2026 repository contains 535 Parquet files and is being used as an independent forward-testing source. The analysis includes 2026 test performance, liquidity/volatility/trend/regime factor tables, MC-vs-baseline uplift, and lagged NSE-BSE basis where synchronized TejHQ observations exist. Results remain pending until the corrected workflow artifact is available.
+
+
+## Run-6 artifact disposition — 20 Sep 2026
+
+The 12 shard jobs in the initial Ganesh run completed, but the aggregate failed on a column-name error. Review of the uploaded shard outputs additionally identified corporate-action scale discontinuities and MC/position-accounting issues. Those outputs are retained only for debugging and are **not accepted as empirical results**. The corrected engine is synced in this branch and a fresh workflow artifact is required before Phase 9 can close.
