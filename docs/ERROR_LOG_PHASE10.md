@@ -10,3 +10,5 @@
 | P10-E006 | corrected | The initial MC implementation used accepted MC trades as its own history, which can permanently suppress participation and makes the comparison non-matched. | MC gate now uses completed baseline trade outcomes as the historical distribution; MC equity is tracked separately. |
 | P10-E007 | corrected | The initial short-horizon loop did not enforce one-position-at-a-time accounting. | Candidate generation now advances past each exit before creating the next trade. |
 | P10-E008 | controlled | The current branch has not yet observed a successful corrected Phase 9 GitHub Actions aggregate. | No corrected Phase 9 result is presented as final until the workflow artifact is observed. |
+
+| P10-E009 | controlled | Direct container download of public GitHub raw market files failed because the execution environment could not resolve raw.githubusercontent.com. | Keep public-data acquisition in GitHub Actions/yfinance and use web/GitHub metadata for source verification; do not treat local container download failure as missing market data. |
