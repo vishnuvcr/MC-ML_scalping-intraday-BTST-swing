@@ -1,0 +1,112 @@
+name: Phase 9 Ganesh Nifty500 1m-to-15m Replication
+
+concurrency:
+  group: phase9-ganesh-nifty500-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  push:
+    branches: [phase-9-nifty500-ganesh]
+  workflow_dispatch:
+
+jobs:
+  manifest:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.make.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: make
+        shell: python
+        run: |
+          import json, urllib.request
+          repos = ['ganeshbiyer/Nse_Historical_Data','ganeshbiyer/Nse_Historical_Data_2026']
+          symbols = set()
+          for repo in repos:
+              url = f'https://api.github.com/repos/{repo}/git/trees/main?recursive=1'
+              req = urllib.request.Request(url, headers={'User-Agent':'MC-Phase9/1.0'})
+              with urllib.request.urlopen(req, timeout=60) as r:
+                  tree = json.load(r)['tree']
+              for item in tree:
+                  p = item.get('path','')
+                  if p.endswith('.parquet') and not p.endswith('-INDEX.parquet'): symbols.add(p[:-8])
+          symbols = sorted(symbols)
+          shards=[]
+          for i in range(12):
+              part=symbols[i::12]
+              if part: shards.append({'id':i,'symbols':part})
+          matrix={'include':shards}
+          with open(os.environ['GITHUB_OUTPUT'],'a') as fh:
+              fh.write('matrix='+json.dumps(matrix,separators=(',',':'))+'\n')
+          print('symbols',len(symbols),'shards',len(shards))
+
+  shard:
+    needs: manifest
+    strategy:
+      fail-fast: false
+      max-parallel: 12
+      matrix: ${{ fromJSON(needs.manifest.outputs.matrix) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/cache@v4
+        with:
+          path: .cache/ganesh
+          key: ganesh-nifty500-v1-${{ matrix.id }}
+      - name: Install dependencies
+        run: pip install -U numpy pandas pyarrow statsmodels scipy
+      - name: Write symbol shard
+        env:
+          SYMBOLS_JSON: ${{ toJSON(matrix.symbols) }}
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          Path('work').mkdir(exist_ok=True)
+          Path('work/symbols.txt').write_text('\n'.join(json.loads(os.environ['SYMBOLS_JSON']))+'\n')
+          PY
+      - name: Download Ganesh 1-minute data
+        env:
+          SYMBOLS_JSON: ${{ toJSON(matrix.symbols) }}
+        run: |
+          python scripts/download_ganesh_nifty500_shard.py --symbols-json "$SYMBOLS_JSON" --out .cache/ganesh
+      - name: Compile research code
+        run: |
+          python -m py_compile scripts/phase9_ganesh_nifty500.py scripts/download_ganesh_nifty500_shard.py scripts/aggregate_ganesh_nifty500.py
+      - name: Run shard analysis
+        run: |
+          python scripts/phase9_ganesh_nifty500.py --symbols-file work/symbols.txt --data-dir .cache/ganesh --nifty50 .cache/ganesh/reference/NIFTY50-INDEX.parquet --out results/shard-${{ matrix.id }}
+      - name: Upload shard-derived results
+        uses: actions/upload-artifact@v4
+        with:
+          name: ganesh-shard-${{ matrix.id }}
+          path: results/shard-${{ matrix.id }}
+
+  aggregate:
+    needs: shard
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -U numpy pandas pyarrow statsmodels scipy
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: ganesh-shard-*
+          path: gathered
+          merge-multiple: false
+      - name: Compile aggregator
+        run: python -m py_compile scripts/aggregate_ganesh_nifty500.py
+      - name: Aggregate universe and factor results
+        run: python scripts/aggregate_ganesh_nifty500.py --root gathered --out final-results
+      - name: Upload final Phase 9 results
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase9-ganesh-nifty500-final
+          path: final-results
