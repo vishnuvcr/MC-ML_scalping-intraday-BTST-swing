@@ -126,3 +126,12 @@ This prevents silently changing time resolution while claiming exact replication
 
 ## Finite stop rule
 No new indicator families or parameter searches are permitted. Phase 9 ends after the universe, selection, regime and cross-market tests defined above. If no conditional strategy survives, the conclusion is that the TCS effect is not sufficiently generalizable under the available evidence.
+
+## Explicit time split
+
+To keep conditional stock-selection and regime findings out-of-sample:
+
+- Full-NSE daily: **train 2018-01-01 to 2023-12-31; validation 2024-01-01 to 2024-12-31; test 2025-01-01 to 2026-04-08**.
+- NIFTY100 minute: **train 2022-01-03 to 2024-12-31; validation 2025; test 2026-01-01 to 2026-04-08**.
+
+Factor/bin thresholds may be estimated on train+validation, but any conditional decision rule is frozen before test evaluation. Descriptive test-only associations are reported as descriptive and cannot be promoted to a strategy.
