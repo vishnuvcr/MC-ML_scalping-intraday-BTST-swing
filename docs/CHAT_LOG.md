@@ -13,3 +13,8 @@ Material decisions:
 - Record errors and research status in repository files after substantive steps.
 
 Private chain-of-thought is not copied into project files. This log records requests, material decisions, evidence and outcomes in a reproducible decision-trace format.
+
+
+## 2026-09-20 — continuation
+
+User instructed: “Ok proceed”. Work continued from Phase 8. The repository state and workflow capability were rechecked. The large 214-symbol release could not be dispatched from the available GitHub interface, and the runtime cannot resolve GitHub's large-release host. A cross-market replication branch was therefore created using independently accessible public CSV panels. A corrected reproducible workflow/script was added, with explicit finite-value aggregation and deterministic Monte-Carlo seeds. Public BSE replication showed negative 2025 test medians at 5 bps/leg for both BTST and swing. No hidden/internal reasoning is copied here; only auditable actions and results are recorded.
