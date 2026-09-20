@@ -136,7 +136,7 @@ def backtest_daily(g, kind, mc):
                 elif held>=8: exit_px=r.close
             if exit_px is not None:
                 qty=pos["qty"]; net=(exit_px-pos["entry"])*qty-cost(pos["entry"]*qty,exit_px*qty,True); ret=net/pos["eq"]; eq+=net; hist.append(ret)
-                if TEST_START<=pos["signal_date"]<=TEST_END and TEST_START<=str(r.date.date())<=TEST_END: trades.append({"entry_date":pos["signal_date"],"date":str(r.date.date()),"ret":ret,"net":net})
+                if TEST_START<=pos["signal_date"]<=TEST_END and TEST_START<=str(r.date.date())<=TEST_END: trades.append({"signal_date":pos["signal_date"],"entry_date":pos["entry_date"],"date":str(r.date.date()),"ret":ret,"net":net})
                 pos=None
             continue
         if not np.isfinite(r.e20) or not np.isfinite(r.e21) or not np.isfinite(r.atr): continue
@@ -234,7 +234,7 @@ def main():
                 if len(fg): feature_rows.append({**t,**fg.iloc[0][["adv20","adv60","vol20","atr_pct","trend","mom20","vol_z","gap","breadth","market_vol20","market_trend20","cross_sectional_dispersion","basis","basis_abs","basis_lag1"]].to_dict(),"mc":1})
             for t in base:
                 d=t["signal_date"]; fg=feat[(feat.symbol==symbol)&(feat.date_key==d)]
-                if len(fg): feature_rows.append({**t,**fg.iloc[0][["adv20","adv60","vol20","atr_pct","trend","mom20","vol_z","gap"]].to_dict(),"mc":0})
+                if len(fg): feature_rows.append({**t,**fg.iloc[0][["adv20","adv60","vol20","atr_pct","trend","mom20","vol_z","gap","breadth","market_vol20","market_trend20","cross_sectional_dispersion","basis","basis_abs","basis_lag1"]].to_dict(),"mc":0})
     pd.DataFrame(daily_rows).to_json(out/"full_nse_daily_results.json",orient="records",indent=2)
     f=pd.DataFrame(feature_rows)
     if not f.empty:
