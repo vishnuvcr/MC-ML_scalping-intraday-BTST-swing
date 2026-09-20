@@ -1,4 +1,4 @@
-import argparse, glob, json, math, os, zlib
+import argparse, glob, json, math, zlib
 from pathlib import Path
 import numpy as np
 import pandas as pd
@@ -14,17 +14,17 @@ def atr(df,n=14):
     return tr.ewm(alpha=1/n,adjust=False,min_periods=n).mean()
 
 def parse_intraday(p):
-    files=glob.glob(str(Path(p)/'*.csv*'))
+    files=sorted(glob.glob(str(Path(p)/'*.csv*')))
     if not files: raise FileNotFoundError(p)
     f=files[0]; df=pd.read_csv(f)
     cols={c.lower():c for c in df.columns}
     dt=cols.get('datetime') or cols.get('timestamp') or cols.get('date')
     rename={cols[x]:x for x in ['open','high','low','close','volume'] if x in cols}
     df=df.rename(columns=rename)
-    df['ts']=pd.to_datetime(df[dt],utc=True,errors='coerce') if getattr(pd.to_datetime(df[dt],errors='coerce').dt,'tz',None) is None else pd.to_datetime(df[dt],errors='coerce')
-    # Convert naive/offset-aware timestamps to IST
-    if df['ts'].dt.tz is None: df['ts']=df['ts'].dt.tz_localize('Asia/Kolkata')
-    else: df['ts']=df['ts'].dt.tz_convert('Asia/Kolkata')
+    parsed=pd.to_datetime(df[dt],errors='coerce')
+    if parsed.dt.tz is None: parsed=parsed.dt.tz_localize('Asia/Kolkata')
+    else: parsed=parsed.dt.tz_convert('Asia/Kolkata')
+    df['ts']=parsed
     df=df.dropna(subset=['ts','open','high','low','close']).sort_values('ts').drop_duplicates('ts')
     df=df[(df['ts'].dt.time>=pd.Timestamp('09:15').time()) & (df['ts'].dt.time<=pd.Timestamp('15:30').time())]
     return df.set_index('ts')[['open','high','low','close','volume']].astype(float)
@@ -36,7 +36,9 @@ def resample_ohlcv(df,rule):
 def parse_daily_json(path):
     obj=json.loads(Path(path).read_text())
     data=obj.get('data',obj.get('results',obj)) if isinstance(obj,dict) else obj
+    if isinstance(data,dict): data=data.get('data',data.get('results',data))
     df=pd.DataFrame(data)
+    if 'date' not in df.columns: raise ValueError(f'No date column in {path}')
     df['date']=pd.to_datetime(df['date'])
     keep=[c for c in ['date','open','high','low','close','volume'] if c in df.columns]
     return df[keep].set_index('date').sort_index().astype(float)
@@ -70,18 +72,20 @@ def run(df,kind,friction,mc,symbol):
         row=df.iloc[i]
         if pos is not None:
             held=i-pos['entry_i']+1; exit_px=None
-            if kind=='btst': exit_px=row.close if held>=1 else None
-            else:
-                if kind=='swing':
-                    if row.low<=pos['stop']: exit_px=row.open if row.open<pos['stop'] else pos['stop']
-                else:
-                    if pos['dir']==1 and row.low<=pos['stop']: exit_px=row.open if row.open<pos['stop'] else pos['stop']
-                    if pos['dir']==-1 and row.high>=pos['stop']: exit_px=row.open if row.open>pos['stop'] else pos['stop']
-                if exit_px is None and held>=max_hold: exit_px=row.close
+            reason=None
+            if kind=='btst' and held>=1:
+                exit_px=row.close; reason='overnight'
+            elif kind!='btst':
+                if kind=='swing' and row.low<=pos['stop']:
+                    exit_px=row.open if row.open<pos['stop'] else pos['stop']; reason='stop'
+                elif kind in ('scalp','intraday'):
+                    if pos['dir']==1 and row.low<=pos['stop']: exit_px=row.open if row.open<pos['stop'] else pos['stop']; reason='stop'
+                    elif pos['dir']==-1 and row.high>=pos['stop']: exit_px=row.open if row.open>pos['stop'] else pos['stop']; reason='stop'
+                if exit_px is None and held>=max_hold: exit_px=row.close; reason='time'
             if exit_px is not None:
                 qty=pos['qty']; gross=pos['dir']*(exit_px-pos['entry'])*qty; buy=pos['entry']*qty if pos['dir']==1 else exit_px*qty; sell=exit_px*qty if pos['dir']==1 else pos['entry']*qty
                 net=gross-costs(buy,sell,delivery,friction); ret=net/pos['equity_before']; equity+=net; peak=max(peak,equity); maxdd=min(maxdd,equity/peak-1); hist.append(ret)
-                trades.append({'symbol':symbol,'entry':str(idx[pos['entry_i']].date()),'exit':str(idx[i].date()),'net':net,'ret':ret,'equity':equity}) ; pos=None
+                trades.append({'symbol':symbol,'entry':str(idx[pos['entry_i']].date()),'exit':str(idx[i].date()),'net':net,'ret':ret,'equity':equity,'reason':reason}); pos=None
             if equity<1000: break
             continue
         up=bool(df.ema20.iloc[i]>df.ema26.iloc[i] and df.ema20.iloc[i-1]<=df.ema26.iloc[i-1])
