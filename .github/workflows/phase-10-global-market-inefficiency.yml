@@ -1,6 +1,8 @@
 name: Phase 10 Global Market Inefficiency
 
 on:
+  push:
+    branches: [phase-10-global-market-inefficiency]
   workflow_dispatch:
     inputs:
       mode:
