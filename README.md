@@ -45,6 +45,18 @@ No single consistent, cost-aware and out-of-sample-robust strategy has been esta
 - `.github/workflows/phase-8-public-data-expansion.yml`
 
 
+## Phase 9 — NSE-wide generalization
+
+The earlier +14.33% TCS result is confirmed as **single-stock evidence**. Phase 9 is testing the frozen EMA20/26 + Monte Carlo gate on (a) a broad NSE daily universe, (b) an independent 2,500+ stock 1-minute dataset resampled to 15-minute bars, and (c) explicit liquidity, breadth, dispersion, volatility/trend and lagged NSE/BSE-basis variables. The phase will not promote a strategy unless the effect survives out-of-sample testing, concentration controls and at least 5 bps/leg friction.
+
+- [Phase 9 plan](docs/PHASE9_PLAN.md)
+- [Phase 9 data registry](docs/DATA_SOURCE_REGISTRY_PHASE9.md)
+- [Phase 9 literature addendum](docs/PHASE9_LITERATURE_ADDENDUM.md)
+- [Phase 9 results](docs/PHASE9_RESULTS.md)
+- [Phase 9 error log](docs/ERROR_LOG_PHASE9.md)
+- [Phase 9 fast daily workflow](.github/workflows/phase-9-fast-nse-daily.yml)
+- [Phase 9 broad intraday workflow](.github/workflows/phase-9-broad-nse-intraday.yml)
+
 ## Phase 8 cross-market replication
 
 A corrected independent historical-NSE panel and a 19-symbol BSE cross-market panel were added without changing the frozen EMA20/21 + Monte-Carlo gate. The accessible BSE 2025 test was negative at 5 bps/leg for both BTST (median -2.94%, 4/19 positive, median PF 0.13) and swing (median -3.28%, 6/19 positive, median PF 0.45). The corrected GitHub Actions rerun is the authoritative aggregate and is preserved as an artifact rather than treating ad-hoc calculations as final.
