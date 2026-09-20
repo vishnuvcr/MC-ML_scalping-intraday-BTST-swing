@@ -76,7 +76,9 @@ def normalize_intraday(df):
     df = df.dropna(subset=["open", "high", "low", "close"]).sort_values("ts")
     df = df[(df["ts"].dt.time >= pd.Timestamp("09:15").time()) &
             (df["ts"].dt.time <= pd.Timestamp("15:30").time())]
-    return df.set_index("ts")
+    df = df.set_index("ts")
+    df, _ = adjust_corporate_action_scales(df)
+    return df
 
 def read_symbol(paths):
     frames = []
@@ -86,6 +88,47 @@ def read_symbol(paths):
     if not frames:
         return pd.DataFrame()
     return normalize_intraday(pd.concat(frames, ignore_index=True))
+
+def adjust_corporate_action_scales(df):
+    """Normalize obvious mechanical split/consolidation scale breaks.
+
+    The Ganesh source is raw OHLCV and has no corporate-action field. Detect only
+    large overnight scale jumps that are within 2% of common split ratios. This
+    is a data-quality correction, not a trading signal.
+    """
+    x = df.sort_index().copy()
+    if x.empty:
+        return x, []
+    day = x.index.normalize()
+    daily = x.groupby(day).agg(open=("open","first"), close=("close","last"))
+    daily["prev_close"] = daily["close"].shift(1)
+    daily["ratio"] = daily["open"] / daily["prev_close"]
+    factors = np.array([0.1, 0.2, 0.25, 1/3, 0.5, 2.0, 3.0, 4.0, 5.0, 10.0])
+    events = []
+    adj = 1.0
+    day_adj = {}
+    for d, row in daily.iterrows():
+        f = None
+        r = row["ratio"]
+        if np.isfinite(r) and r > 0 and abs(np.log(r)) > np.log(1.2):
+            j = int(np.argmin(np.abs(np.log(r / factors))))
+            cand = float(factors[j])
+            if abs(np.log(r / cand)) <= np.log(1.02):
+                f = cand
+        if f is not None:
+            adj *= 1.0 / f
+            events.append({"date": str(pd.Timestamp(d).date()), "raw_open_prev_close_ratio": float(r), "scale_factor": f, "cumulative_price_multiplier": adj})
+        day_adj[d] = adj
+    if not events:
+        return x, events
+    mult = pd.Series([day_adj[d] for d in day], index=x.index, dtype=float)
+    x["open"] *= mult
+    x["high"] *= mult
+    x["low"] *= mult
+    x["close"] *= mult
+    if "volume" in x.columns:
+        x["volume"] = x["volume"] / mult
+    return x, events
 
 def resample_15m(raw):
     agg = {
@@ -122,43 +165,27 @@ def daily_features(m15):
     d["vol_z"] = ((d["volume"] - mean_v) / std_v).shift(1)
     return d
 
-def simulate(m15, features, symbol, friction_bps, use_mc):
+def make_candidates(m15, features, symbol, friction_bps):
     d = m15.copy()
     d["e20"] = ema(d["close"], 20)
     d["e26"] = ema(d["close"], 26)
     d["atr14"] = atr(d, 14)
 
-    equity = 100000.0
-    peak = equity
-    max_dd = 0.0
-    history = []
-    trades = []
-    seed = zlib.crc32(symbol.encode()) & 0xffffffff
-
-    for i in range(27, len(d) - 1):
+    candidates = []
+    i = 27
+    while i < len(d) - 1:
         r = d.iloc[i]
         if not (np.isfinite(r["e20"]) and np.isfinite(r["e26"]) and np.isfinite(r["atr14"])):
+            i += 1
             continue
 
-        # Frozen Phase-7 intraday rule is LONG ONLY.
         cross_up = bool(r["e20"] > r["e26"] and d["e20"].iloc[i-1] <= d["e26"].iloc[i-1])
         if not cross_up:
-            continue
-
-        signal_ts = d.index[i]
-        feature_row = features.loc[signal_ts.normalize()] if signal_ts.normalize() in features.index else None
-        factor = feature_row.to_dict() if feature_row is not None else {}
-
-        accepted = (not use_mc) or mc_gate(history, seed)
-        if not accepted:
+            i += 1
             continue
 
         entry_i = i + 1
         entry = float(d["open"].iloc[entry_i])
-        qty = int(equity // entry)
-        if qty <= 0:
-            continue
-
         stop = entry - 1.5 * float(r["atr14"])
         exit_i = None
         exit_px = None
@@ -177,29 +204,88 @@ def simulate(m15, features, symbol, friction_bps, use_mc):
                 exit_px = float(bar["close"])
                 reason = "time"
 
-        buy_value = entry * qty
-        sell_value = exit_px * qty
-        gross = (exit_px - entry) * qty
-        net = gross - cost_intraday(buy_value, sell_value, friction_bps)
-        ret = net / equity
-        equity += net
-        peak = max(peak, equity)
-        max_dd = min(max_dd, equity / peak - 1.0)
-        history.append(ret)
-
-        trades.append({
+        buy_per_share = entry
+        sell_per_share = exit_px
+        gross_pct = (exit_px - entry) / entry
+        signal_ts = d.index[i]
+        factor_row = features.loc[signal_ts.normalize()] if signal_ts.normalize() in features.index else None
+        factor = factor_row.to_dict() if factor_row is not None else {}
+        candidates.append({
             "symbol": symbol,
             "signal_ts": str(signal_ts),
             "signal_date": str(signal_ts.date()),
             "entry_ts": str(d.index[entry_i]),
             "exit_ts": str(d.index[exit_i]),
-            "net": net,
-            "ret": ret,
+            "entry": entry,
+            "exit": exit_px,
+            "gross_pct": gross_pct,
             "exit_reason": reason,
             **factor
         })
+        i = exit_i + 1
 
+    return candidates
+
+def run_baseline(candidates, friction_bps):
+    equity = 100000.0
+    trades = []
+    returns = []
+    peak = equity
+    max_dd = 0.0
+    for c in candidates:
+        qty = int(equity // c["entry"])
+        if qty <= 0:
+            continue
+        buy_value = c["entry"] * qty
+        sell_value = c["exit"] * qty
+        gross = (c["exit"] - c["entry"]) * qty
+        net = gross - cost_intraday(buy_value, sell_value, friction_bps)
+        ret = net / equity
+        equity += net
+        peak = max(peak, equity)
+        max_dd = min(max_dd, equity / peak - 1.0)
+        row = dict(c)
+        row.update({"net": net, "ret": ret, "qty": qty})
+        trades.append(row)
+        returns.append(ret)
+    return trades, returns, max_dd
+
+def run_mc(candidates, baseline_returns, friction_bps, symbol):
+    equity = 100000.0
+    peak = equity
+    max_dd = 0.0
+    trades = []
+    seed = zlib.crc32(symbol.encode()) & 0xffffffff
+    history = []
+    for idx, c in enumerate(candidates):
+        accepted = mc_gate(history, seed)
+        # Gate uses the completed baseline strategy's historical outcomes,
+        # not outcomes from previously accepted MC trades.
+        if accepted:
+            qty = int(equity // c["entry"])
+            if qty > 0:
+                buy_value = c["entry"] * qty
+                sell_value = c["exit"] * qty
+                gross = (c["exit"] - c["entry"]) * qty
+                net = gross - cost_intraday(buy_value, sell_value, friction_bps)
+                ret = net / equity
+                equity += net
+                peak = max(peak, equity)
+                max_dd = min(max_dd, equity / peak - 1.0)
+                row = dict(c)
+                row.update({"net": net, "ret": ret, "qty": qty})
+                trades.append(row)
+        if idx < len(baseline_returns):
+            history.append(baseline_returns[idx])
     return trades, max_dd
+
+def simulate(m15, features, symbol, friction_bps, use_mc):
+    candidates = make_candidates(m15, features, symbol, friction_bps)
+    baseline_trades, baseline_returns, baseline_dd = run_baseline(candidates, friction_bps)
+    if not use_mc:
+        return baseline_trades, baseline_dd
+    mc_trades, mc_dd = run_mc(candidates, baseline_returns, friction_bps, symbol)
+    return mc_trades, mc_dd
 
 def summarize(trades, max_dd):
     if not trades:
