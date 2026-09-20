@@ -220,6 +220,7 @@ def main():
     basis=cross_market_basis(nse,bse)
     feat=feat.merge(regimes,on="date",how="left").merge(basis,on=["date","symbol"],how="left")
     nse_test=nse[(nse.date>=TEST_START)&(nse.date<=TEST_END)]
+    feat_lookup=feat.set_index(["symbol","date_key"],drop=False)
     daily_rows=[]; feature_rows=[]; selected_rows=[]
     for symbol,g in nse.groupby("symbol",sort=True):
         if len(g)<80: continue
@@ -230,11 +231,14 @@ def main():
             daily_rows.append({"symbol":symbol,"horizon":kind,"baseline":sb,"mc":sm,"delta_return_pct":sm["return_pct"]-sb["return_pct"]})
             for t in mc:
                 d=t["signal_date"]
-                fg=feat[(feat.symbol==symbol)&(feat.date_key==d)]
-                if len(fg): feature_rows.append({**t,**fg.iloc[0][["adv20","adv60","vol20","atr_pct","trend","mom20","vol_z","gap","breadth","market_vol20","market_trend20","cross_sectional_dispersion","basis","basis_abs","basis_lag1"]].to_dict(),"mc":1})
+                try: fg=feat_lookup.loc[(symbol,d)]
+                except KeyError: fg=None
+                if fg is not None and hasattr(fg,"to_dict"): feature_rows.append({**t,**{k:fg[k] for k in ["adv20","adv60","vol20","atr_pct","trend","mom20","vol_z","gap","breadth","market_vol20","market_trend20","cross_sectional_dispersion","basis","basis_abs","basis_lag1"]},"mc":1})
             for t in base:
-                d=t["signal_date"]; fg=feat[(feat.symbol==symbol)&(feat.date_key==d)]
-                if len(fg): feature_rows.append({**t,**fg.iloc[0][["adv20","adv60","vol20","atr_pct","trend","mom20","vol_z","gap","breadth","market_vol20","market_trend20","cross_sectional_dispersion","basis","basis_abs","basis_lag1"]].to_dict(),"mc":0})
+                d=t["signal_date"]
+                try: fg=feat_lookup.loc[(symbol,d)]
+                except KeyError: fg=None
+                if fg is not None and hasattr(fg,"to_dict"): feature_rows.append({**t,**{k:fg[k] for k in ["adv20","adv60","vol20","atr_pct","trend","mom20","vol_z","gap","breadth","market_vol20","market_trend20","cross_sectional_dispersion","basis","basis_abs","basis_lag1"]},"mc":0})
     pd.DataFrame(daily_rows).to_json(out/"full_nse_daily_results.json",orient="records",indent=2)
     f=pd.DataFrame(feature_rows)
     if not f.empty:
@@ -277,7 +281,7 @@ def main():
         except Exception as exc:
             intraday_rows.append({"symbol":p.stem,"error":repr(exc)})
     pd.DataFrame(intraday_rows).to_csv(out/"nifty100_15m_results.csv",index=False)
-    prov={"nse_symbols":int(nse.symbol.nunique()),"nse_rows":int(len(nse)),"daily_test_start":TEST_START,"daily_test_end":TEST_END,"nifty100_files":len(mcp_files),"bse_available":bool(not bse.empty),"bse_matched_rows":int(len(basis))}
+    prov={"nse_symbols":int(nse.symbol.nunique()),"nse_rows":int(len(nse)),"nse_first_date":str(nse.date.min().date()),"nse_last_date":str(nse.date.max().date()),"daily_test_start":TEST_START,"daily_test_end":TEST_END,"nifty100_files":len(mcp_files),"bse_available":bool(not bse.empty),"bse_matched_rows":int(len(basis))}
     Path(out/"provenance.json").write_text(json.dumps(prov,indent=2))
     print(json.dumps(prov,indent=2))
 
