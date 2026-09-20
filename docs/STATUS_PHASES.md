@@ -10,7 +10,7 @@ Updated: 2026-09-20
 - Phase 5 — Robustness and regime analysis: EMPIRICALLY SCREENED ON SECONDARY PUBLIC OHLCV; FULL MICROSTRUCTURE ROBUSTNESS NOT POSSIBLE
 - Phase 6 — Final synthesis and manuscript: COMPLETE
 - Phase 7 — Empirical re-opening and finite strategy screen: COMPLETE
-- Phase 8 — Public-data expansion and cross-source validation: IN PROGRESS (source audit + corrected 8-symbol interim screen complete; independent 214-symbol/TejHQ GitHub Actions run pending)
+- Phase 8 — Public-data expansion and cross-source validation: IN PROGRESS (source audit + corrected 8-symbol interim screen complete; independent 214-symbol/TejHQ run blocked from manual dispatch in this interface; cross-market NSE/BSE replication workflow added)
 
 ## Phase 7 outcome
 A common Monte Carlo-gated EMA framework was tested across scalping (15-minute proxy), intraday, true one-overnight BTST, and swing. Alternative breakout, mean-reversion, VWAP, opening-range, gap and cross-sectional families were also screened.
