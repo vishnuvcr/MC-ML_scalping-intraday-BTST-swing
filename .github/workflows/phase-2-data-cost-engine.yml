@@ -1,0 +1,23 @@
+name: Phase 2 - Data and Cost Engine
+
+on:
+  workflow_dispatch:
+
+jobs:
+  cost-engine:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run cost engine tests
+        run: python -m pytest -q test_cost_engine.py
+      - name: Check Phase 2 documentation
+        run: |
+          test -f docs/COST_MODEL_2026.md
+          test -f docs/DATA_SCHEMA.md
+          test -f COST_CONFIG_2026.txt
+          echo "Phase 2 cost/data artifacts present."
