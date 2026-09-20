@@ -83,7 +83,9 @@ def daily_features(nse):
     z["adv20"]=z.groupby("symbol")["turnover"].transform(lambda s:s.rolling(20,min_periods=20).mean())
     z["adv60"]=z.groupby("symbol")["turnover"].transform(lambda s:s.rolling(60,min_periods=60).mean())
     z["vol20"]=z.groupby("symbol")["ret1"].transform(lambda s:s.rolling(20,min_periods=20).std())
-    z["atr14"]=z.groupby("symbol").apply(lambda g: atr(g[["open","high","low","close"]],14)).reset_index(level=0,drop=True)
+    prev_close=z.groupby("symbol")["close"].shift(1)
+    tr=pd.concat([(z["high"]-z["low"]),(z["high"]-prev_close).abs(),(z["low"]-prev_close).abs()],axis=1).max(axis=1)
+    z["atr14"]=tr.groupby(z["symbol"]).transform(lambda s:s.ewm(alpha=1/14,adjust=False,min_periods=14).mean())
     z["atr_pct"]=z["atr14"]/z["close"]
     z["ema20"]=z.groupby("symbol")["close"].transform(lambda s:ema(s,20))
     z["ema50"]=z.groupby("symbol")["close"].transform(lambda s:ema(s,50))
@@ -92,6 +94,32 @@ def daily_features(nse):
     z["vol_z"]=(z["volume"]-z.groupby("symbol")["volume"].transform(lambda s:s.rolling(20,min_periods=20).mean()))/z.groupby("symbol")["volume"].transform(lambda s:s.rolling(20,min_periods=20).std())
     z["date_key"]=z["date"].dt.strftime("%Y-%m-%d")
     return z
+
+def market_regimes(nse):
+    x=nse.copy()
+    x["ret1"]=x.groupby("symbol")["close"].pct_change()
+    reg=x.groupby("date").agg(
+        breadth=("ret1",lambda s:float((s>0).mean())),
+        market_median_ret=("ret1","median"),
+        cross_sectional_dispersion=("ret1","std")
+    ).reset_index()
+    reg["market_vol20"]=reg["market_median_ret"].rolling(20,min_periods=20).std()
+    reg["market_trend20"]=reg["market_median_ret"].rolling(20,min_periods=20).sum()
+    reg["breadth_regime"]=pd.cut(reg["breadth"],[-np.inf,0.4,0.6,np.inf],labels=["weak","neutral","strong"])
+    reg["vol_regime"]=pd.qcut(reg["market_vol20"],3,labels=["low","mid","high"],duplicates="drop")
+    reg["trend_regime"]=np.where(reg["market_trend20"]>0,"up","down")
+    return reg
+
+def cross_market_basis(nse,bse):
+    if bse.empty: return pd.DataFrame(columns=["date","symbol","basis","basis_abs","basis_lag1"])
+    n=nse[["date","symbol","close"]].rename(columns={"close":"nse_close"})
+    b=bse[["date","symbol","close"]].rename(columns={"close":"bse_close"})
+    m=n.merge(b,on=["date","symbol"],how="inner")
+    m["basis"]=m["bse_close"]/m["nse_close"]-1
+    m["basis_abs"]=m["basis"].abs()
+    m=m.sort_values(["symbol","date"])
+    m["basis_lag1"]=m.groupby("symbol")["basis"].shift(1)
+    return m[["date","symbol","basis","basis_abs","basis_lag1"]]
 
 def backtest_daily(g, kind, mc):
     g=g.sort_values("date").reset_index(drop=True)
@@ -174,6 +202,10 @@ def main():
     a=ap.parse_args(); out=Path(a.out); out.mkdir(parents=True,exist_ok=True)
     nse=parse_nse_daily(list(Path(a.daily_root).glob("nse/year=*/nse_*.parquet")))
     feat=daily_features(nse)
+    regimes=market_regimes(nse)
+    bse=parse_bse(list(Path(a.bse_root).glob("bse/year=*/bse_*.parquet"))) if a.bse_root else pd.DataFrame()
+    basis=cross_market_basis(nse,bse)
+    feat=feat.merge(regimes,on="date",how="left").merge(basis,on=["date","symbol"],how="left")
     nse_test=nse[(nse.date>=TEST_START)&(nse.date<=TEST_END)]
     daily_rows=[]; feature_rows=[]; selected_rows=[]
     for symbol,g in nse.groupby("symbol",sort=True):
@@ -186,7 +218,7 @@ def main():
             for t in mc:
                 d=t["entry_date"]
                 fg=feat[(feat.symbol==symbol)&(feat.date_key==d)]
-                if len(fg): feature_rows.append({**t,**fg.iloc[0][["adv20","adv60","vol20","atr_pct","trend","mom20","vol_z","gap"]].to_dict(),"mc":1})
+                if len(fg): feature_rows.append({**t,**fg.iloc[0][["adv20","adv60","vol20","atr_pct","trend","mom20","vol_z","gap","breadth","market_vol20","market_trend20","cross_sectional_dispersion","basis","basis_abs","basis_lag1"]].to_dict(),"mc":1})
             for t in base:
                 d=t["entry_date"]; fg=feat[(feat.symbol==symbol)&(feat.date_key==d)]
                 if len(fg): feature_rows.append({**t,**fg.iloc[0][["adv20","adv60","vol20","atr_pct","trend","mom20","vol_z","gap"]].to_dict(),"mc":0})
@@ -201,7 +233,7 @@ def main():
         ff=f.sort_values("entry_date").groupby(["symbol","entry_date"],as_index=False).first()
         joined=joined.merge(ff.drop(columns=["ret","mc"],errors="ignore"),on=["symbol","entry_date"],how="left")
         factor_tables=[]
-        for col in ["adv20","adv60","vol20","atr_pct","trend","mom20","vol_z","gap"]:
+        for col in ["adv20","adv60","vol20","atr_pct","trend","mom20","vol_z","gap","breadth","market_vol20","market_trend20","cross_sectional_dispersion","basis","basis_abs","basis_lag1"]:
             factor_tables += quintile_table(joined,col)
         joined.to_csv(out/"trade_factor_panel.csv",index=False); pd.DataFrame(factor_tables).to_csv(out/"factor_quintiles.csv",index=False)
     mcp_files=list(Path(a.mcp_root).glob("*.csv"))+list(Path(a.mcp_root).glob("*.json")) if a.mcp_root else []
@@ -223,7 +255,7 @@ def main():
         except Exception as exc:
             intraday_rows.append({"symbol":p.stem,"error":repr(exc)})
     pd.DataFrame(intraday_rows).to_csv(out/"nifty100_15m_results.csv",index=False)
-    prov={"nse_symbols":int(nse.symbol.nunique()),"nse_rows":int(len(nse)),"daily_test_start":TEST_START,"daily_test_end":TEST_END,"nifty100_files":len(mcp_files),"bse_available":bool(a.bse_root)}
+    prov={"nse_symbols":int(nse.symbol.nunique()),"nse_rows":int(len(nse)),"daily_test_start":TEST_START,"daily_test_end":TEST_END,"nifty100_files":len(mcp_files),"bse_available":bool(not bse.empty),"bse_matched_rows":int(len(basis))}
     Path(out/"provenance.json").write_text(json.dumps(prov,indent=2))
     print(json.dumps(prov,indent=2))
 
