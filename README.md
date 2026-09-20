@@ -43,3 +43,9 @@ No single consistent, cost-aware and out-of-sample-robust strategy has been esta
 - `docs/ERROR_LOG_PHASE8.md`
 - `scripts/phase8_public_data_screen.py`
 - `.github/workflows/phase-8-public-data-expansion.yml`
+
+
+## Latest Phase 8 cross-market update
+A corrected independent historical-NSE panel (20 project symbols, test 2019-2022) and a 19-symbol BSE panel (test 2025) are now part of Phase 8 validation. The historical-NSE preliminary corrected aggregate at 5 bps/leg remains negative for both frozen daily horizons: BTST mean -4.97%, median -4.61%, 4/19 positive, median PF 0.50; swing mean -3.69%, median -7.51%, 7/19 positive, median PF 0.62. The BSE panel is also negative in 2025 at 5 bps/leg: BTST mean -2.55%, median -2.94%, 4/19 positive, median PF 0.13; swing mean -3.36%, median -3.28%, 6/19 positive, median PF 0.45.
+
+These are public-data replication results, not exchange-grade live-trading evidence. The reproducible GitHub Actions workflow is the final artifact path; no claim is made that its runner artifact has executed until it is observable.
