@@ -60,7 +60,7 @@ jobs:
       - name: Fetch NIFTY100 15-minute candles through public MCP
         env:
           MCP_START: "2024-01-01"
-          MCP_END: "2026-09-07"
+          MCP_END: "2026-04-08"
           MCP_OUT: "raw/nifty100_15m"
         run: python scripts/phase9_mcp_15m_fetch.py
       - name: Run Phase 9 analysis
