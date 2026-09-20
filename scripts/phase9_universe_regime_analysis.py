@@ -229,11 +229,11 @@ def main():
             sm=summarize([t for t in mc if TEST_START<=t["date"]<=TEST_END])
             daily_rows.append({"symbol":symbol,"horizon":kind,"baseline":sb,"mc":sm,"delta_return_pct":sm["return_pct"]-sb["return_pct"]})
             for t in mc:
-                d=t["entry_date"]
+                d=t["signal_date"]
                 fg=feat[(feat.symbol==symbol)&(feat.date_key==d)]
                 if len(fg): feature_rows.append({**t,**fg.iloc[0][["adv20","adv60","vol20","atr_pct","trend","mom20","vol_z","gap","breadth","market_vol20","market_trend20","cross_sectional_dispersion","basis","basis_abs","basis_lag1"]].to_dict(),"mc":1})
             for t in base:
-                d=t["entry_date"]; fg=feat[(feat.symbol==symbol)&(feat.date_key==d)]
+                d=t["signal_date"]; fg=feat[(feat.symbol==symbol)&(feat.date_key==d)]
                 if len(fg): feature_rows.append({**t,**fg.iloc[0][["adv20","adv60","vol20","atr_pct","trend","mom20","vol_z","gap"]].to_dict(),"mc":0})
     pd.DataFrame(daily_rows).to_json(out/"full_nse_daily_results.json",orient="records",indent=2)
     f=pd.DataFrame(feature_rows)
