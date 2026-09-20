@@ -404,7 +404,7 @@ def main():
                             row["market_trend20"] = np.nan
                         panel_rows.append(row)
 
-            d = features.reset_index()
+            d = features.reset_index().rename(columns={"index":"date"})
             d["symbol"] = symbol
             daily_rows.append(d[["date", "symbol", "ret1"]])
         except Exception as exc:
@@ -415,37 +415,7 @@ def main():
 
     panel = pd.DataFrame(panel_rows)
     if not panel.empty:
-        # Stock-selection and market-regime descriptive factors.
-        daily_returns = pd.concat(daily_rows, ignore_index=True) if daily_rows else pd.DataFrame()
-        if not daily_returns.empty:
-            cross = daily_returns.groupby("date").agg(
-                n=("ret1", "count"),
-                pos=("ret1", lambda s: int((s > 0).sum())),
-                sum_ret=("ret1", "sum"),
-                sum_sq=("ret1", lambda s: float((s ** 2).sum()))
-            ).reset_index()
-            cross["breadth"] = cross["pos"] / cross["n"]
-            cross["mean_ret"] = cross["sum_ret"] / cross["n"]
-            cross["dispersion"] = np.sqrt(
-                np.maximum(cross["sum_sq"] / cross["n"] - cross["mean_ret"] ** 2, 0)
-            )
-            cross["date_lag"] = pd.to_datetime(cross["date"]).shift(1)
-            cross["breadth_lag"] = cross["breadth"].shift(1)
-            cross["dispersion_lag"] = cross["dispersion"].shift(1)
-            reg = cross[["date", "breadth_lag", "dispersion_lag"]].copy()
-            reg["date"] = pd.to_datetime(reg["date"]).dt.tz_localize("Asia/Kolkata")
-            panel["signal_day"] = pd.to_datetime(panel["signal_ts"]).dt.normalize()
-            panel = panel.merge(reg, left_on="signal_day", right_on="date", how="left").drop(columns=["date"])
-            panel["breadth"] = panel["breadth_lag"]
-            panel["dispersion"] = panel["dispersion_lag"]
-            panel = panel.drop(columns=["breadth_lag", "dispersion_lag"])
-
         panel.to_csv(out / "signal_panel.csv", index=False)
-        tests, quintiles = factor_tests(panel)
-        quintiles.to_csv(out / "factor_quintiles.csv", index=False)
-        (out / "conditional_tests.json").write_text(json.dumps(tests, indent=2))
-
-        # Concentration diagnostics.
         p = results[results["friction_bps"] == 5.0].copy()
         winners = p[p["mc_return_pct"] > 0].sort_values("mc_return_pct", ascending=False)
         concentration = {
@@ -459,6 +429,21 @@ def main():
             )
         }
         (out / "concentration.json").write_text(json.dumps(concentration, indent=2))
+
+    if daily_rows:
+        daily = pd.concat(daily_rows, ignore_index=True)
+        cross = daily.groupby("date").agg(
+            n=("ret1", "count"),
+            pos=("ret1", lambda s: int((s > 0).sum())),
+            sum_ret=("ret1", "sum"),
+            sum_sq=("ret1", lambda s: float((s ** 2).sum()))
+        ).reset_index()
+        cross["breadth"] = cross["pos"] / cross["n"]
+        cross["mean_ret"] = cross["sum_ret"] / cross["n"]
+        cross["dispersion"] = np.sqrt(
+            np.maximum(cross["sum_sq"] / cross["n"] - cross["mean_ret"] ** 2, 0)
+        )
+        cross.to_csv(out / "daily_cross_section.csv", index=False)
 
     (out / "failures.json").write_text(json.dumps(failures, indent=2))
     (out / "provenance.json").write_text(json.dumps({
