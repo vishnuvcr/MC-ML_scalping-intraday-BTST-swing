@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import argparse, json, math, re, statistics
+import argparse, json, math, re, statistics, zlib
 from pathlib import Path
 import numpy as np
 import pandas as pd
@@ -107,17 +107,17 @@ def backtest_daily(g, kind, mc):
                 elif held>=8: exit_px=r.close
             if exit_px is not None:
                 qty=pos["qty"]; net=(exit_px-pos["entry"])*qty-cost(pos["entry"]*qty,exit_px*qty,True); ret=net/pos["eq"]; eq+=net; hist.append(ret)
-                if TEST_START<=str(r.date.date())<=TEST_END: trades.append({"entry_date":pos["entry_date"],"date":str(r.date.date()),"ret":ret,"net":net})
+                if TEST_START<=pos["signal_date"]<=TEST_END and TEST_START<=str(r.date.date())<=TEST_END: trades.append({"entry_date":pos["signal_date"],"date":str(r.date.date()),"ret":ret,"net":net})
                 pos=None
             continue
         if not np.isfinite(r.e20) or not np.isfinite(r.e21) or not np.isfinite(r.atr): continue
         up=r.e20>r.e21 and g.iloc[i-1].e20<=g.iloc[i-1].e21
         if not up: continue
-        if mc and not mc_gate(hist,hash(g.symbol.iloc[0]+kind)&0xffffffff): continue
+        if mc and not mc_gate(hist,zlib.crc32((g.symbol.iloc[0]+kind).encode()) & 0xffffffff): continue
         entry=float(g.open.iloc[i+1]); qty=int(eq//entry)
         if qty<=0: continue
         stop=entry-0.75*r.atr if kind=="swing" else entry
-        pos={"ei":i+1,"entry":entry,"qty":qty,"eq":eq,"entry_date":str(g.date.iloc[i+1].date()),"stop":stop}
+        pos={"ei":i+1,"entry":entry,"qty":qty,"eq":eq,"entry_date":str(g.date.iloc[i+1].date()),"signal_date":str(g.date.iloc[i].date()),"stop":stop}
     return trades
 
 def backtest_15m(df,symbol,mc):
@@ -144,7 +144,7 @@ def backtest_15m(df,symbol,mc):
         up=r.e20>r.e26 and d.e20.iloc[i-1]<=d.e26.iloc[i-1]
         dn=r.e20<r.e26 and d.e20.iloc[i-1]>=d.e26.iloc[i-1]
         if not (up or dn): continue
-        if mc and not mc_gate(hist,hash(symbol)&0xffffffff): continue
+        if mc and not mc_gate(hist,zlib.crc32(symbol.encode()) & 0xffffffff): continue
         entry=float(d.open.iloc[i+1]); qty=int(eq//entry)
         if qty<=0: continue
         direction=1 if up else -1
