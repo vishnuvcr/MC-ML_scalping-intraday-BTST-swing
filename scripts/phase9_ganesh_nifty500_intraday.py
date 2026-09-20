@@ -195,6 +195,40 @@ def simulate(m15,feat,symbol,friction,use_mc):
              "direction":direction,"stop":stop,"record":signal.copy()}
     return signals,trades,maxdd
 
+
+def load_tej(root):
+    frames=[]
+    for p in list(Path(root).glob("nse/year=*/nse_*.parquet"))+list(Path(root).glob("bse/year=*/bse_*.parquet")):
+        side="nse" if "/nse/" in str(p).replace("\\","/") else "bse"
+        x=pd.read_parquet(p)
+        lo={str(z).lower():z for z in x.columns}
+        dc=lo.get("date") or lo.get("datetime") or lo.get("timestamp")
+        sc=lo.get("symbol"); cc=lo.get("close"); ic=lo.get("isin")
+        if not dc or not sc or not cc: continue
+        q=x[[dc,sc,cc]+([ic] if ic else [])].copy()
+        q=q.rename(columns={dc:"date",sc:"symbol",cc:"close"})
+        if ic: q=q.rename(columns={ic:"isin"})
+        q["date"]=pd.to_datetime(q["date"],errors="coerce").dt.normalize()
+        q["symbol"]=q["symbol"].astype(str).str.upper()
+        q["close"]=pd.to_numeric(q["close"],errors="coerce")
+        q["side"]=side
+        frames.append(q.dropna(subset=["date","close"]))
+    if not frames: return pd.DataFrame()
+    return pd.concat(frames,ignore_index=True)
+
+def lagged_basis(tej):
+    if tej.empty: return pd.DataFrame()
+    n=tej[tej.side=="nse"].copy(); b=tej[tej.side=="bse"].copy()
+    key="isin" if "isin" in n.columns and "isin" in b.columns and n.isin.notna().any() and b.isin.notna().any() else "symbol"
+    n["join_key"]=n[key].astype(str).str.upper(); b["join_key"]=b[key].astype(str).str.upper()
+    m=n[["date","join_key","symbol","close"]].rename(columns={"symbol":"nse_symbol","close":"nse_close"})
+    z=b[["date","join_key","close"]].rename(columns={"close":"bse_close"})
+    m=m.merge(z,on=["date","join_key"],how="inner").sort_values(["join_key","date"])
+    m["basis"]=m.bse_close/m.nse_close-1
+    m["basis_lag1"]=m.groupby("join_key").basis.shift(1)
+    m["basis_abs_lag1"]=m.basis_lag1.abs()
+    return m[["date","join_key","basis_lag1","basis_abs_lag1"]]
+
 def stats(trades):
     if not trades: return {"n":0,"return_pct":0.0,"pf":None,"win_rate":None}
     x=np.asarray([t["net"] for t in trades],float); w=x[x>0]; l=x[x<0]
@@ -275,6 +309,13 @@ def main():
         except Exception as e:
             errors.append({"symbol":symbol,"error":repr(e)})
     panel=pd.DataFrame(panel_rows)
+    if args.tej_root and not panel.empty:
+        tej=load_tej(args.tej_root)
+        basis=lagged_basis(tej)
+        if not basis.empty:
+            panel['basis_key']=panel['symbol'].astype(str).str.upper()
+            panel=panel.merge(basis,left_on=['signal_date','basis_key'],right_on=['date','join_key'],how='left')
+            panel=panel.drop(columns=['date','join_key','basis_key'],errors='ignore')
     if daily_parts:
         daily=pd.concat(daily_parts,ignore_index=True)
         daily["date"]=pd.to_datetime(daily["date"]).dt.normalize()
