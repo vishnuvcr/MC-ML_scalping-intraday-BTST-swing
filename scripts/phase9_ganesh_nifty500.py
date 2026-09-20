@@ -404,7 +404,8 @@ def main():
                             row["market_trend20"] = np.nan
                         panel_rows.append(row)
 
-            d = features.reset_index().rename(columns={"index":"date"})
+            d = features.reset_index()
+            d = d.rename(columns={d.columns[0]:"date"})
             d["symbol"] = symbol
             daily_rows.append(d[["date", "symbol", "ret1"]])
         except Exception as exc:
