@@ -61,3 +61,15 @@ These are public-data replication results, not exchange-grade live-trading evide
 **Phase 8 is complete under the finite public-data protocol.** The historical NSE and independent BSE daily replications both failed the robustness gate at 5 bps/leg for the frozen BTST/swing EMA framework. The strongest short-horizon result remains the TCS 15-minute intraday candidate, which is not live-validated or universal.
 
 Final artifacts: [final manuscript](manuscript/FINAL_RESEARCH_REPORT.md), [evidence gate](docs/FINAL_EVIDENCE_GATE_PHASE8.md), [final error log](docs/ERROR_LOG_PHASE8_FINAL.md), [phase status](docs/STATUS_PHASES.md), and [manual final-synthesis workflow](.github/workflows/phase-8-final-synthesis.yml).
+
+
+## Phase 9 — NSE universe / stock selection / regimes
+
+The TCS intraday candidate is being re-tested rather than assumed to generalize. Phase 9 uses an exact NIFTY-100 15-minute panel where available, full-NSE daily EOD data, and pre-specified liquidity, volatility, trend, regime and NSE/BSE basis variables. 
+
+- [Phase 9 plan](docs/PHASE9_PLAN.md)
+- [Phase 9 data-source registry](docs/DATA_SOURCE_REGISTRY_PHASE9.md)
+- [Phase 9 results](docs/PHASE9_RESULTS.md)
+- [Phase 9 manuscript addendum](docs/PHASE9_MANUSCRIPT_ADDENDUM.md)
+- [Phase 9 workflow](.github/workflows/phase-9-universe-selection-regime.yml)
+- [Phase 9 error log](docs/ERROR_LOG_PHASE9.md)
