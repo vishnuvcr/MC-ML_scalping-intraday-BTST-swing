@@ -71,6 +71,11 @@ Until that workflow is executed, the public-source expansion remains partially c
 
 ## Phase 8.1 cross-market replication update — 20 Sep 2026
 
+### Corrected preliminary historical-NSE panel
+
+Twenty project symbols were fetched from the public historical NIFTY-50 repository. Test window: 2019-01-01 to 2022-12-31. At 5 bps/leg, the corrected exploratory aggregate was BTST mean -4.97%, median -4.61%, 4/19 positive symbols, median PF 0.50; swing mean -3.69%, median -7.51%, 7/19 positive symbols, median PF 0.62. These preliminary values are internally consistent after explicit finite-value filtering but remain subordinate to the GitHub Actions artifact when that run is observable.
+
+
 An independently accessible BSE panel covering 19 requested project symbols for 2023-2025 produced negative 2025 test medians under the frozen EMA20/21 daily rules at 5 bps/leg: BTST median -2.94% with 4/19 positive symbols and median PF 0.13; swing median -3.28% with 6/19 positive symbols and median PF 0.45. The Monte-Carlo gate was not materially exercised because most symbols did not reach the 20-trade warm-up; this is recorded as a limitation.
 
 A separate 20-symbol historical NSE panel (roughly 2012-2022, test 2019-2022) was also fetched and screened. Its first exploratory aggregation exposed a non-finite-summary handling error, which is now corrected in the reproducible workflow. Those exploratory NSE aggregate values are not treated as final evidence; the workflow artifact is authoritative.
