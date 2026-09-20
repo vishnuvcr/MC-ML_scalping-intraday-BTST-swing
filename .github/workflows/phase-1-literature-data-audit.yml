@@ -1,0 +1,18 @@
+name: Phase 1 - Literature and Data Audit
+
+on:
+  workflow_dispatch:
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Check Phase 1 artifacts
+        run: |
+          test -f docs/LITERATURE_REVIEW.md
+          test -f docs/DATA_SOURCE_AUDIT.md
+          test -f docs/ERROR_LOG.md
+          test -f docs/CHAT_LOG.md
+          echo "Phase 1 audit artifacts present."
