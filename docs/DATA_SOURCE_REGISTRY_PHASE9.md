@@ -31,3 +31,22 @@ Raw third-party market data are not copied into the repository. Workflows may ca
 Source: https://huggingface.co/datasets/rahulkrraj/indian-stock-market-minute-data
 
 The dataset publishes ~720 million minute rows covering 2,500+ NSE stocks and indices, describes coverage as 99.4% of active/suspended NSE equities and provides 1-minute candles from 2022-01-03 through 2026-01-21. The minute files are eight large ~1.4–1.6 GB Parquet shards sorted by symbol then timestamp. License is MIT. Phase 9 will process one shard at a time to avoid repeatedly downloading/caching 10.5 GB of raw files and will retain only derived results in the repository. citeturn893748search0turn893748search1
+
+## Tier A3 — Ganesh Biyer broad intraday Nifty 500
+
+### `ganeshbiyer/Nse_Historical_Data`
+- README states 1-minute historical data for Nifty 500 stocks, 2018 through 31 Dec 2025.
+- README states 1-minute files are Parquet and includes NIFTY, BankNifty, FinNifty and MidcapNifty indexes.
+- Current Git tree contains 552 Parquet files; current blob sizes sum to about 5.87 GB.
+- Repository has no declared license in GitHub metadata. Raw data will therefore never be copied into the project repository; runner-only use.
+
+### `ganeshbiyer/Nse_Historical_Data_2026`
+- README/repository description states 1-minute historical data for Nifty 500 stocks for 2026.
+- Current Git tree contains 535 Parquet files; current blob sizes sum to about 1.19 GB.
+- GitHub metadata declares GPL-3.0 for this repository. Raw data remains runner-only.
+
+### Use in Phase 9
+The two repositories will be treated as a continuous broad intraday panel: 2018–2025 from the first repository plus 2026 from the second. The frozen TCS EMA20/26 15-minute strategy is resampled from 1-minute data. Because the universe is Nifty 500 rather than all NSE listings, results will be labelled **Nifty-500 intraday replication**, not full-NSE intraday validation.
+
+### Regime inputs
+The Ganesh data include NIFTY50-INDEX, NIFTYBANK, FINNIFTY-INDEX and MIDCPNIFTY-INDEX files, enabling market-regime and cross-sectional benchmark variables directly inside the same intraday source family.
