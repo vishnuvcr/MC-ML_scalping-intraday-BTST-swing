@@ -45,6 +45,18 @@ No single consistent, cost-aware and out-of-sample-robust strategy has been esta
 - `.github/workflows/phase-8-public-data-expansion.yml`
 
 
+## Phase 9 — NSE-wide generalization
+
+The earlier +14.33% TCS result is confirmed as **single-stock evidence**. Phase 9 is testing the frozen EMA20/26 + Monte Carlo gate on (a) a broad NSE daily universe, (b) an independent 2,500+ stock 1-minute dataset resampled to 15-minute bars, and (c) explicit liquidity, breadth, dispersion, volatility/trend and lagged NSE/BSE-basis variables. The phase will not promote a strategy unless the effect survives out-of-sample testing, concentration controls and at least 5 bps/leg friction.
+
+- [Phase 9 plan](docs/PHASE9_PLAN.md)
+- [Phase 9 data registry](docs/DATA_SOURCE_REGISTRY_PHASE9.md)
+- [Phase 9 literature addendum](docs/PHASE9_LITERATURE_ADDENDUM.md)
+- [Phase 9 results](docs/PHASE9_RESULTS.md)
+- [Phase 9 error log](docs/ERROR_LOG_PHASE9.md)
+- [Phase 9 fast daily workflow](.github/workflows/phase-9-fast-nse-daily.yml)
+- [Phase 9 broad intraday workflow](.github/workflows/phase-9-broad-nse-intraday.yml)
+
 ## Phase 8 cross-market replication
 
 A corrected independent historical-NSE panel and a 19-symbol BSE cross-market panel were added without changing the frozen EMA20/21 + Monte-Carlo gate. The accessible BSE 2025 test was negative at 5 bps/leg for both BTST (median -2.94%, 4/19 positive, median PF 0.13) and swing (median -3.28%, 6/19 positive, median PF 0.45). The corrected GitHub Actions rerun is the authoritative aggregate and is preserved as an artifact rather than treating ad-hoc calculations as final.
@@ -61,3 +73,22 @@ These are public-data replication results, not exchange-grade live-trading evide
 **Phase 8 is complete under the finite public-data protocol.** The historical NSE and independent BSE daily replications both failed the robustness gate at 5 bps/leg for the frozen BTST/swing EMA framework. The strongest short-horizon result remains the TCS 15-minute intraday candidate, which is not live-validated or universal.
 
 Final artifacts: [final manuscript](manuscript/FINAL_RESEARCH_REPORT.md), [evidence gate](docs/FINAL_EVIDENCE_GATE_PHASE8.md), [final error log](docs/ERROR_LOG_PHASE8_FINAL.md), [phase status](docs/STATUS_PHASES.md), and [manual final-synthesis workflow](.github/workflows/phase-8-final-synthesis.yml).
+
+
+## Phase 9 — NSE universe / stock selection / regimes
+
+The TCS intraday candidate is being re-tested rather than assumed to generalize. Phase 9 uses an exact NIFTY-100 15-minute panel where available, full-NSE daily EOD data, and pre-specified liquidity, volatility, trend, regime and NSE/BSE basis variables. 
+
+- [Phase 9 plan](docs/PHASE9_PLAN.md)
+- [Phase 9 data-source registry](docs/DATA_SOURCE_REGISTRY_PHASE9.md)
+- [Phase 9 results](docs/PHASE9_RESULTS.md)
+- [Phase 9 manuscript addendum](docs/PHASE9_MANUSCRIPT_ADDENDUM.md)
+- [Phase 9 workflow](.github/workflows/phase-9-universe-selection-regime.yml)
+- [Phase 9 error log](docs/ERROR_LOG_PHASE9.md)
+
+
+### Phase 9 broad intraday universe
+
+The +14.33% TCS result is now being re-tested on a **499-symbol overlapping Nifty500 universe** using the Ganesh Biyer 1-minute datasets from 2018-2025 and 2026, resampled to 15-minute bars. The analysis also tests whether liquidity, volatility, trend, beta/residual risk, market regime, breadth/dispersion and time-of-day explain MC success.
+
+Raw third-party data are runner-only; derived results and provenance are retained in the project.

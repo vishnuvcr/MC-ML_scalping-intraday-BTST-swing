@@ -1,0 +1,61 @@
+name: Phase 9 Ganesh Nifty500 2026 Forward
+
+concurrency:
+  group: phase9-ganesh-2026-forward-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  push:
+    branches: [phase-9-universe-selection-regime]
+  workflow_dispatch:
+
+jobs:
+  forward_2026:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Cache Ganesh 2026 data
+        id: cache_new
+        uses: actions/cache@v4
+        with:
+          path: external/ganesh_2026
+          key: ganesh-nifty500-2026-e8f19f3f53ca6fac0b116e83508e814e568dca54
+      - name: Checkout Ganesh 2026 data
+        if: steps.cache_new.outputs.cache-hit != 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: ganeshbiyer/Nse_Historical_Data_2026
+          ref: main
+          path: external/ganesh_2026
+          fetch-depth: 1
+      - name: Install dependencies
+        run: pip install -U numpy pandas pyarrow statsmodels scipy huggingface_hub
+      - name: Cache TejHQ daily files
+        uses: actions/cache@v4
+        with:
+          path: .cache/phase9_2026_tejhq
+          key: phase9-2026-tejhq-2024-2026-v1
+      - name: Download synchronized TejHQ NSE/BSE daily files
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from huggingface_hub import hf_hub_download
+          import shutil
+          base=Path('external/tejhq'); base.mkdir(parents=True,exist_ok=True)
+          for ex in ['nse','bse']:
+              for year in [2024,2025,2026]:
+                  rel=f'{ex}/year={year}/{ex}_{year}.parquet'
+                  p=hf_hub_download(repo_id='tejhq/indian-markets',filename=rel,repo_type='dataset',cache_dir='.cache/phase9_2026_tejhq')
+                  out=base/rel; out.parent.mkdir(parents=True,exist_ok=True); shutil.copy2(p,out)
+          PY
+      - name: Run 2026 Nifty500 forward test
+        run: python scripts/phase9_ganesh_nifty500_2026_forward.py --old-root external/ganesh_2026 --new-root external/ganesh_2026 --tej-root external/tejhq --out research_results/phase9_ganesh_2026_forward
+      - name: Upload derived results
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase9-ganesh-nifty500-2026-forward
+          path: research_results/phase9_ganesh_2026_forward

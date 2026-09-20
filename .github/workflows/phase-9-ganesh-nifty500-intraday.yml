@@ -1,0 +1,75 @@
+name: Phase 9 Ganesh Nifty500 1m to 15m
+
+concurrency:
+  group: phase9-ganesh-nifty500-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  push:
+    branches: [phase-9-universe-selection-regime]
+  workflow_dispatch:
+
+jobs:
+  ganesh_nifty500:
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Cache 2018-2025 Ganesh data
+        id: cache_old
+        uses: actions/cache@v4
+        with:
+          path: external/ganesh_2018_2025
+          key: ganesh-nifty500-2018-2025-af4d583e9bc0b5d7567b33bd5ec575cee5cbae3a
+      - name: Checkout 2018-2025 Ganesh data
+        if: steps.cache_old.outputs.cache-hit != 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: ganeshbiyer/Nse_Historical_Data
+          ref: main
+          path: external/ganesh_2018_2025
+          fetch-depth: 1
+      - name: Cache 2026 Ganesh data
+        id: cache_new
+        uses: actions/cache@v4
+        with:
+          path: external/ganesh_2026
+          key: ganesh-nifty500-2026-e8f19f3f53ca6fac0b116e83508e814e568dca54
+      - name: Checkout 2026 Ganesh data
+        if: steps.cache_new.outputs.cache-hit != 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: ganeshbiyer/Nse_Historical_Data_2026
+          ref: main
+          path: external/ganesh_2026
+          fetch-depth: 1
+      - name: Install dependencies
+        run: pip install -U numpy pandas pyarrow statsmodels scipy huggingface_hub
+      - name: Cache TejHQ daily files
+        uses: actions/cache@v4
+        with:
+          path: .cache/phase9_tejhq
+          key: phase9-tejhq-2024-2026-v1
+      - name: Download synchronized TejHQ NSE/BSE daily files
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from huggingface_hub import hf_hub_download
+          import shutil
+          base=Path('external/tejhq'); base.mkdir(parents=True,exist_ok=True)
+          for ex,start in [('nse',2024),('bse',2024)]:
+              for year in [2024,2025,2026]:
+                  rel=f'{ex}/year={year}/{ex}_{year}.parquet'
+                  p=hf_hub_download(repo_id='tejhq/indian-markets',filename=rel,repo_type='dataset',cache_dir='.cache/phase9_tejhq')
+                  out=base/rel; out.parent.mkdir(parents=True,exist_ok=True); shutil.copy2(p,out)
+          PY
+      - name: Run frozen 15-minute replication on overlapping Nifty500 universe
+        run: python scripts/phase9_ganesh_nifty500_intraday.py --old-root external/ganesh_2018_2025 --new-root external/ganesh_2026 --tej-root external/tejhq --out research_results/phase9_ganesh_nifty500
+      - name: Upload derived results only
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase9-ganesh-nifty500-intraday
+          path: research_results/phase9_ganesh_nifty500
