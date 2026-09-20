@@ -33,3 +33,10 @@ No single strategy passed the robustness standard across all four horizons. The 
 
 ## Phase 8 interim status
 Public Kaggle, Hugging Face, TejHQ and GitHub datasets have been identified and provenance recorded. The accessible 8-symbol mirror screen is negative for the frozen EMA family at 5 bps/leg across intraday/scalping/BTST/swing; this is not treated as independent replication. The corrected engine and manual GitHub Actions workflow are now in place for the independent public-source run.
+
+
+## Latest Phase 8 update
+- Public-source expansion: COMPLETE for discovery/audit step.
+- Corrected interim execution: COMPLETE on 8 accessible symbols using the existing public GitHub mirror.
+- True 1-minute bulk execution: BLOCKED in the current connector/runtime by file-size limits; no invalid result accepted.
+- Independent 214-symbol F&O and TejHQ run: IMPLEMENTED in GitHub Actions workflow; execution artifact still pending because the available interface cannot manually dispatch Actions.
