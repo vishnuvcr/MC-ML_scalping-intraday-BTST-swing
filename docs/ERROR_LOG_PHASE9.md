@@ -8,3 +8,4 @@
 | P9-E004 | controlled limitation | Dr-Kitz hourly data are CC BY-NC 4.0. | Use runner cache only; do not commit raw third-party files. |
 
 | P9-E005 | corrected | Hosted NIFTY-100 MCP `list_symbols` returned repeated JSON objects rather than one JSON array; the first parser expected a list and aborted before fetching any candles. | Rewrote the parser to collect repeated symbol objects line-by-line, retry 15-minute/5-minute/1-minute intervals, and resample to 15 minutes when only finer data are returned. |
+| P9-E006 | corrected | The independent daily-only workflow omitted `huggingface_hub`, so TejHQ files could not be downloaded. | Added the dependency; the main broad-NSE workflow already verified that the TejHQ download succeeds. |
