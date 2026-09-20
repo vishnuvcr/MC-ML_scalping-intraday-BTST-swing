@@ -13,3 +13,4 @@ Updated: 20 September 2026
 
 ## Rule
 All discarded outputs are excluded from the research conclusion. Only corrected reruns are eligible for synthesis.
+| E0016 | True 1-minute interim screen | Connector rejected the 1m CSV payload as too large before contents could be processed. | No 1m backtest result accepted from that attempt. | Keep 1m work in GitHub Actions/cache; use only corrected 5m/15m and daily interim results here. |
