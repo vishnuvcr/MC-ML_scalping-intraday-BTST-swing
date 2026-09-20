@@ -1,0 +1,14 @@
+sp500=^GSPC
+nasdaq100=^NDX
+dax=^GDAXI
+ftse100=^FTSE
+nikkei=^N225
+hangseng=^HSI
+kospi=^KS11
+cac40=^FCHI
+vix=^VIX
+usdinr=USDINR=X
+brent=BZ=F
+gold=GC=F
+nifty50=^NSEI
+sensex=^BSESN
