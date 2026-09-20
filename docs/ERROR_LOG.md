@@ -29,3 +29,8 @@ A preliminary momentum experiment allowed overlapping positions while sequential
 
 ## E0010 — Available repository-fetch interface could not return the very large 1-minute files
 The accessible 1-minute file existed in the public research dataset but exceeded the file-fetch interface limit. Resolution: use 15-minute data as a clearly labelled scalping proxy and do not claim true tick/1-minute scalping validation.
+
+
+## E0022 — 2026-09-20
+Status: resolved.
+The Phase 8 final-synthesis pull request conflicted with contemporaneous main-branch edits and could not be merged directly. Resolution: synchronized the finalized manuscript, evidence gate, Phase 8 replication artifacts and workflows directly onto main after verifying each file against the final-synthesis branch.
