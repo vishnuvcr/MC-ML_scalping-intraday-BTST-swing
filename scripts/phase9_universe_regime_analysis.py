@@ -3,6 +3,7 @@ import argparse, json, math, re, statistics, zlib
 from pathlib import Path
 import numpy as np
 import pandas as pd
+import statsmodels.api as sm
 
 FRICTION = 5.0
 TEST_START = "2025-01-01"
@@ -185,6 +186,18 @@ def summarize(trades):
     n=np.array([t["net"] for t in trades],float); wins=n[n>0]; losses=n[n<0]
     return {"n":int(len(n)),"return_pct":float(n.sum()/1000.),"pf":float(wins.sum()/-losses.sum()) if len(losses) else None,"win_rate":float((n>0).mean())}
 
+def standardized_regression(df, y_col, x_cols):
+    q=df[[y_col]+x_cols].replace([np.inf,-np.inf],np.nan).dropna().copy()
+    if len(q)<50: return {"n":len(q),"status":"insufficient"}
+    X=q[x_cols].copy()
+    for col in x_cols:
+        sd=X[col].std()
+        X[col]=(X[col]-X[col].mean())/(sd if sd and np.isfinite(sd) else 1.0)
+    X=sm.add_constant(X,has_constant="add")
+    y=q[y_col].astype(float)
+    model=sm.OLS(y,X).fit(cov_type="HC3")
+    return {"n":int(len(q)),"r2":float(model.rsquared),"params":{k:float(v) for k,v in model.params.items()},"pvalues":{k:float(v) for k,v in model.pvalues.items()}}
+
 def quintile_table(df, value_col):
     rows=[]
     df=df.dropna(subset=[value_col,"ret"]).copy()
@@ -236,6 +249,15 @@ def main():
         for col in ["adv20","adv60","vol20","atr_pct","trend","mom20","vol_z","gap","breadth","market_vol20","market_trend20","cross_sectional_dispersion","basis","basis_abs","basis_lag1"]:
             factor_tables += quintile_table(joined,col)
         joined.to_csv(out/"trade_factor_panel.csv",index=False); pd.DataFrame(factor_tables).to_csv(out/"factor_quintiles.csv",index=False)
+        regressors=["adv20","vol20","atr_pct","trend","mom20","vol_z","gap","breadth","market_vol20","market_trend20","cross_sectional_dispersion","basis_abs"]
+        models={}
+        if "ret_mc" in joined.columns:
+            tmp=joined.dropna(subset=["ret_base","ret_mc"]).copy(); tmp["mc_delta"]=tmp["ret_mc"]-tmp["ret_base"]
+            models["mc_delta_common"]=standardized_regression(tmp,"mc_delta",[x for x in regressors if x in tmp.columns])
+        mc_only=f[f["mc"]==1].copy()
+        if not mc_only.empty:
+            models["mc_trade_return"]=standardized_regression(mc_only,"ret",[x for x in regressors if x in mc_only.columns])
+        Path(out/"conditional_regressions.json").write_text(json.dumps(models,indent=2))
     mcp_files=list(Path(a.mcp_root).glob("*.csv"))+list(Path(a.mcp_root).glob("*.json")) if a.mcp_root else []
     intraday_rows=[]
     for p in mcp_files:
