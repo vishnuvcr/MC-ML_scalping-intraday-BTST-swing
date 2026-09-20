@@ -122,7 +122,7 @@ def daily_features(m15):
     d["vol_z"] = ((d["volume"] - mean_v) / std_v).shift(1)
     return d
 
-def simulate(m15, features, symbol, friction_bps, use_mc):
+def simulate(m15, features, symbol, friction_bps, use_mc, use_global_gate=False):
     d = m15.copy()
     d["e20"] = ema(d["close"], 20)
     d["e26"] = ema(d["close"], 26)
@@ -134,6 +134,7 @@ def simulate(m15, features, symbol, friction_bps, use_mc):
     history = []
     trades = []
     seed = zlib.crc32(symbol.encode()) & 0xffffffff
+    test_started = False
 
     for i in range(27, len(d) - 1):
         r = d.iloc[i]
@@ -146,8 +147,20 @@ def simulate(m15, features, symbol, friction_bps, use_mc):
             continue
 
         signal_ts = d.index[i]
+        if signal_ts >= TEST_START and not test_started:
+            # OOS equity is reset at the test boundary so historical
+            # compounding, splits and early-sample path dependence cannot
+            # contaminate the 2026 evaluation capital.
+            equity = 100000.0
+            peak = equity
+            max_dd = 0.0
+            test_started = True
+
         feature_row = features.loc[signal_ts.normalize()] if signal_ts.normalize() in features.index else None
         factor = feature_row.to_dict() if feature_row is not None else {}
+
+        if use_global_gate and int(factor.get("global_risk_on", 0) or 0) != 1:
+            continue
 
         accepted = (not use_mc) or mc_gate(history, seed)
         if not accepted:
@@ -196,6 +209,7 @@ def simulate(m15, features, symbol, friction_bps, use_mc):
             "net": net,
             "ret": ret,
             "exit_reason": reason,
+            "global_gate_used": int(use_global_gate),
             **factor
         })
 
@@ -304,6 +318,7 @@ def main():
     ap.add_argument("--symbols-file", required=True)
     ap.add_argument("--data-dir", required=True)
     ap.add_argument("--nifty50", required=True)
+    ap.add_argument("--global-markets", default="")
     ap.add_argument("--out", required=True)
     args = ap.parse_args()
 
@@ -323,6 +338,12 @@ def main():
     me50 = ema(nifty_daily["close"], 50)
     nifty_daily["market_trend20"] = (me20 / me50 - 1).shift(1)
 
+    global_features = pd.DataFrame()
+    if args.global_markets:
+        global_features = pd.read_csv(args.global_markets)
+        global_features["date"] = pd.to_datetime(global_features["india_date"]).dt.tz_localize("Asia/Kolkata")
+        global_features = global_features.drop(columns=["india_date"], errors="ignore").set_index("date").sort_index()
+
     all_results = []
     panel_rows = []
     daily_rows = []
@@ -341,29 +362,47 @@ def main():
 
             m15 = resample_15m(raw)
             features = daily_features(m15)
+            if not global_features.empty:
+                features = features.join(global_features, how="left")
+                features["global_gap_nifty_minus_world"] = (
+                    features["ret1"] - features["global_median_ret"]
+                )
+            else:
+                features["global_gap_nifty_minus_world"] = np.nan
+                features["global_risk_on"] = 0
             if len(m15) < 100:
                 failures.append({"symbol": symbol, "error": "insufficient 15m bars"})
                 continue
 
-            # Build baseline and MC panels at each friction level.
+            # Build baseline, MC and the pre-specified global risk-on gate at each friction level.
             for friction in FRICTIONS:
-                base_trades, base_dd = simulate(m15, features, symbol, friction, False)
-                mc_trades, mc_dd = simulate(m15, features, symbol, friction, True)
+                base_trades, base_dd = simulate(m15, features, symbol, friction, False, False)
+                mc_trades, mc_dd = simulate(m15, features, symbol, friction, True, False)
+                base_global_trades, base_global_dd = simulate(m15, features, symbol, friction, False, True)
+                mc_global_trades, mc_global_dd = simulate(m15, features, symbol, friction, True, True)
 
                 def select_test(ts):
                     return TEST_START <= pd.Timestamp(ts) <= raw.index.max()
 
                 bt = [t for t in base_trades if select_test(t["signal_ts"])]
                 mt = [t for t in mc_trades if select_test(t["signal_ts"])]
+                bgt = [t for t in base_global_trades if select_test(t["signal_ts"])]
+                mgt = [t for t in mc_global_trades if select_test(t["signal_ts"])]
 
                 # 2025 validation + 2026 test statistics.
                 bv = [t for t in base_trades if VALIDATION_START <= pd.Timestamp(t["signal_ts"]) <= VALIDATION_END]
                 mv = [t for t in mc_trades if VALIDATION_START <= pd.Timestamp(t["signal_ts"]) <= VALIDATION_END]
+                bgv = [t for t in base_global_trades if VALIDATION_START <= pd.Timestamp(t["signal_ts"]) <= VALIDATION_END]
+                mgv = [t for t in mc_global_trades if VALIDATION_START <= pd.Timestamp(t["signal_ts"]) <= VALIDATION_END]
 
                 bstats = summarize(bt, base_dd)
                 mstats = summarize(mt, mc_dd)
+                bgstats = summarize(bgt, base_global_dd)
+                mgstats = summarize(mgt, mc_global_dd)
                 vbstats = summarize(bv, base_dd)
                 vmstats = summarize(mv, mc_dd)
+                vbgstats = summarize(bgv, base_global_dd)
+                vmgstats = summarize(mgv, mc_global_dd)
 
                 all_results.append({
                     "symbol": symbol, "friction_bps": friction,
@@ -373,26 +412,48 @@ def main():
                     "mc_n": mstats["n"], "mc_return_pct": mstats["return_pct"],
                     "mc_pf": mstats["pf"], "mc_win_rate": mstats["win_rate"],
                     "mc_maxdd_pct": mstats["maxdd_pct"],
+                    "base_global_n": bgstats["n"], "base_global_return_pct": bgstats["return_pct"],
+                    "base_global_pf": bgstats["pf"], "base_global_win_rate": bgstats["win_rate"],
+                    "base_global_maxdd_pct": bgstats["maxdd_pct"],
+                    "mc_global_n": mgstats["n"], "mc_global_return_pct": mgstats["return_pct"],
+                    "mc_global_pf": mgstats["pf"], "mc_global_win_rate": mgstats["win_rate"],
+                    "mc_global_maxdd_pct": mgstats["maxdd_pct"],
                     "delta_return_pct": mstats["return_pct"] - bstats["return_pct"],
+                    "delta_global_vs_mc_pct": mgstats["return_pct"] - mstats["return_pct"],
                     "validation_baseline_return_pct": vbstats["return_pct"],
                     "validation_mc_return_pct": vmstats["return_pct"],
-                    "validation_delta_return_pct": vmstats["return_pct"] - vbstats["return_pct"]
+                    "validation_delta_return_pct": vmstats["return_pct"] - vbstats["return_pct"],
+                    "validation_base_global_return_pct": vbgstats["return_pct"],
+                    "validation_mc_global_return_pct": vmgstats["return_pct"],
+                    "validation_global_vs_mc_pct": vmgstats["return_pct"] - vmstats["return_pct"]
                 })
 
                 if friction == 5.0:
                     bmap = {t["signal_ts"]: t for t in bt}
                     mmap = {t["signal_ts"]: t for t in mt}
+                    bgmap = {t["signal_ts"]: t for t in bgt}
+                    mgmap = {t["signal_ts"]: t for t in mgt}
                     for ts, b in bmap.items():
                         row = {
                             "symbol": symbol, "signal_ts": ts,
                             "baseline_ret": b["ret"], "baseline_net": b["net"],
                             "mc_accept": int(ts in mmap),
                             "mc_ret": mmap[ts]["ret"] if ts in mmap else np.nan,
-                            "mc_net": mmap[ts]["net"] if ts in mmap else np.nan
+                            "mc_net": mmap[ts]["net"] if ts in mmap else np.nan,
+                            "global_gate": int(ts in bgmap),
+                            "base_global_ret": bgmap[ts]["ret"] if ts in bgmap else np.nan,
+                            "base_global_net": bgmap[ts]["net"] if ts in bgmap else np.nan,
+                            "mc_global_accept": int(ts in mgmap),
+                            "mc_global_ret": mgmap[ts]["ret"] if ts in mgmap else np.nan,
+                            "mc_global_net": mgmap[ts]["net"] if ts in mgmap else np.nan
                         }
                         for k in (
                             "adv20", "adv60", "vol20", "atr_pct",
-                            "trend", "mom20", "vol_z", "gap"
+                            "trend", "mom20", "vol_z", "gap",
+                            "global_median_ret", "global_breadth",
+                            "global_dispersion", "vix_change", "dxy_ret",
+                            "usdinr_ret", "wti_ret", "gold_ret",
+                            "global_gap_nifty_minus_world"
                         ):
                             row[k] = b.get(k, np.nan)
                         dkey = pd.Timestamp(ts).normalize()
@@ -454,6 +515,8 @@ def main():
         "validation_end": str(VALIDATION_END),
         "frictions_bps_per_leg": FRICTIONS,
         "strategy": "Phase-7 frozen LONG-ONLY EMA20/26, ATR14 1.5 stop, 20-bar max hold, next-bar open entry",
+        "global_gate": "pre-specified risk-on gate: prior completed global equity breadth >= 62.5% and VIX change <= 0",
+        "oos_accounting": "reset test equity to INR 100000 at TEST_START; train/validation path not allowed to set test capital",
         "mc": "250 bootstrap paths of last 30 net trade returns after 20-trade warm-up; >=125 positive paths",
         "sources": [
             "ganeshbiyer/Nse_Historical_Data (2018-2025)",
