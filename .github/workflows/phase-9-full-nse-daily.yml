@@ -1,5 +1,9 @@
 name: Phase 9 Full NSE Daily Selection and Regime
 
+concurrency:
+  group: phase9-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     branches: [phase-9-universe-selection-regime]
