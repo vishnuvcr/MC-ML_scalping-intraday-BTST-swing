@@ -24,6 +24,18 @@ jobs:
           key: phase9-fast-daily-marketdata-v1
       - name: Install dependencies
         run: pip install -U numpy pandas pyarrow statsmodels huggingface_hub
+      - name: Compile and smoke-test
+        run: |
+          python -m py_compile scripts/phase9_fast_daily.py scripts/phase9_universe_regime_analysis.py scripts/phase9_full_nse_intraday.py
+          python - <<'PY'
+          import pandas as pd, numpy as np
+          from scripts.phase9_fast_daily import ema, atr, mc_gate
+          x=pd.DataFrame({'open':np.arange(50,dtype=float)+100,'high':np.arange(50,dtype=float)+101,'low':np.arange(50,dtype=float)+99,'close':np.arange(50,dtype=float)+100,'volume':np.ones(50)})
+          assert np.isfinite(ema(x.close,20).iloc[-1])
+          assert np.isfinite(atr(x,14).iloc[-1])
+          assert isinstance(mc_gate([0.01]*20,123),bool)
+          print('phase9 smoke test passed')
+          PY
       - name: Download TejHQ NSE and synchronized BSE
         run: |
           python - <<'PY'
