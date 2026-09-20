@@ -62,3 +62,9 @@ Brokerage per executed order, statutory charges, spread, slippage, order type, l
 
 ## Stop condition added 2026-09-20
 If the required licensed or otherwise valid market data cannot be acquired without violating source terms, the study stops at the empirical gate. The final report must then distinguish validated methodological/software findings from unestimated stock-level profitability. No synthetic-data result may be presented as evidence of live-market profitability.
+
+## Phase 7 — Empirical re-opening and finite strategy screen
+User-requested extension reopened the empirical gate using a secondary public OHLCV dataset. The screen tested four horizon-specific implementations under one common Monte Carlo-gated framework and several pre-specified alternative families. The phase is closed after the candidate families failed to produce a robust positive result across all four horizons. Further indicator/parameter expansion is prohibited without a new protocol amendment and independent data.
+
+### Phase 7 stop rule
+A strategy is not labelled usable/live-ready unless it is positive net out-of-sample, survives the validation gate, and remains credible under the study's cost model. A positive single-symbol or single-period result is reported as a research candidate only.
