@@ -92,3 +92,18 @@ The TCS intraday candidate is being re-tested rather than assumed to generalize.
 The +14.33% TCS result is now being re-tested on a **499-symbol overlapping Nifty500 universe** using the Ganesh Biyer 1-minute datasets from 2018-2025 and 2026, resampled to 15-minute bars. The analysis also tests whether liquidity, volatility, trend, beta/residual risk, market regime, breadth/dispersion and time-of-day explain MC success.
 
 Raw third-party data are runner-only; derived results and provenance are retained in the project.
+
+## Phase 10 — Global-market information and cross-market inefficiency
+
+The scope is explicitly widened from NSE/BSE to global markets. Phase 10 tests whether lagged foreign-market information adds value to the frozen Indian EMA20/26 intraday framework. The primary candidate is a prior-session five-market global sign-consensus >= +3 filter, tested only after costs and a strict time split.
+
+- [Phase 10 plan](docs/PHASE10_PLAN.md)
+- [Phase 10 literature addendum](docs/PHASE10_LITERATURE_ADDENDUM.md)
+- [Phase 10 results](docs/PHASE10_RESULTS.md)
+- [Phase 10 error log](docs/ERROR_LOG_PHASE10.md)
+- [Phase 10 global filter engine](scripts/phase10_global_market_filters.py)
+- [Phase 10 manual workflow](.github/workflows/phase-10-global-market-inefficiency.yml)
+
+Current Phase 10 evidence: historical 2010–2022 and independent 2006–2026 global-index pilots show directional lead/lag associations in train/validation samples, but the synchronized 2026 sample available in the independent repository is small and does not reproduce the positive mean. No global filter is promoted yet.
+
+Phase 9 correction note: the initial Ganesh Nifty500 aggregate is explicitly non-authoritative because of an aggregate column-name bug plus discovered corporate-action and trade-accounting issues. A corrected engine is now frozen and requires a fresh authoritative workflow artifact.
