@@ -1,0 +1,94 @@
+name: Phase 10 Global Market Inefficiency
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Run pilot only or join a Phase 9 trade panel"
+        required: true
+        default: "pilot"
+        type: choice
+        options:
+          - pilot
+          - oos
+      refresh_data:
+        description: "Refresh Yahoo/yfinance global data instead of using runner cache"
+        required: true
+        default: false
+        type: boolean
+      phase9_run_id:
+        description: "Phase 9 run ID containing the final aggregate artifact (required for oos mode)"
+        required: false
+        default: ""
+        type: string
+      phase9_artifact_name:
+        description: "Phase 9 artifact name"
+        required: false
+        default: "phase9-ganesh-nifty500-final"
+        type: string
+
+jobs:
+  phase10:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - uses: actions/cache@v4
+        with:
+          path: .cache/phase10-global
+          key: phase10-global-v1-\${{ hashFiles('config/phase10_global_tickers.txt') }}
+
+      - name: Install dependencies
+        run: pip install -U yfinance pandas numpy
+
+      - name: Validate inputs
+        env:
+          MODE: \${{ inputs.mode }}
+          RUN_ID: \${{ inputs.phase9_run_id }}
+        run: |
+          if [ "$MODE" = "oos" ] && [ -z "$RUN_ID" ]; then
+            echo "phase9_run_id is required in oos mode"
+            exit 1
+          fi
+
+      - name: Download Phase 9 artifact for OOS join
+        if: \${{ inputs.mode == 'oos' }}
+        env:
+          GH_TOKEN: \${{ github.token }}
+          RUN_ID: \${{ inputs.phase9_run_id }}
+          ARTIFACT: \${{ inputs.phase9_artifact_name }}
+        run: |
+          mkdir -p phase9-artifact
+          gh run download "$RUN_ID" -n "$ARTIFACT" -D phase9-artifact
+          find phase9-artifact -maxdepth 3 -type f -print
+
+      - name: Run global pilot / OOS diagnostic
+        env:
+          MODE: \${{ inputs.mode }}
+          REFRESH: \${{ inputs.refresh_data }}
+        run: |
+          mkdir -p results/phase10
+          args=(--global-dir .cache/phase10-global --out results/phase10 --download)
+          if [ "$REFRESH" = "true" ]; then
+            args+=(--refresh)
+          fi
+          if [ "$MODE" = "oos" ]; then
+            panel="$(find phase9-artifact -type f \( -name 'all_signal_panel_with_regimes.csv' -o -name 'signal_panel.csv' \) | head -1)"
+            if [ -z "$panel" ]; then
+              echo "No Phase 9 trade panel found in artifact"
+              exit 1
+            fi
+            args+=(--phase9-panel "$panel")
+          fi
+          python scripts/phase10_global_market_filters.py "\${args[@]}"
+
+      - name: Upload Phase 10 results
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase10-global-market-results
+          path: results/phase10
