@@ -12,3 +12,5 @@
 | P10-E008 | controlled | The current branch has not yet observed a successful corrected Phase 9 GitHub Actions aggregate. | No corrected Phase 9 result is presented as final until the workflow artifact is observed. |
 
 | P10-E009 | controlled | Direct container download of public GitHub raw market files failed because the execution environment could not resolve raw.githubusercontent.com. | Keep public-data acquisition in GitHub Actions/yfinance and use web/GitHub metadata for source verification; do not treat local container download failure as missing market data. |
+
+| P10-E010 | corrected | Initial Phase 10 workflow exposed a malformed escaped GitHub Actions expression and an unused OOS artifact path, causing `gh run download` to receive an empty run ID and fail with HTTP 401. | Simplified the workflow to a deterministic pilot-only job; OOS joining will be added only after the Phase 9 authoritative artifact exists. |
