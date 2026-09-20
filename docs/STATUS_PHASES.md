@@ -62,3 +62,7 @@ See [PHASE10_PLAN.md](PHASE10_PLAN.md), [PHASE10_RESULTS.md](PHASE10_RESULTS.md)
 ## Phase 9 correction gate
 
 The initial Ganesh Nifty500 workflow is not accepted as final empirical evidence. Corporate-action scaling, MC-gate history and overlapping-position accounting were corrected; a fresh workflow artifact is required before Phase 9 can close.
+
+### Latest execution update — 20 Sep 2026
+- Phase 9 corrected Nifty500 run remains **in progress**; latest observed state: 1 manifest completed, 9 shard jobs active, 3 queued. No final aggregate is accepted yet.
+- Phase 10 pilot workflow had an infrastructure failure in the optional OOS artifact path. It has been simplified and the failure is logged as P10-E010. No market conclusion was changed by this failure.
