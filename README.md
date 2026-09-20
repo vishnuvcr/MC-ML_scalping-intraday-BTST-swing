@@ -85,3 +85,10 @@ The TCS intraday candidate is being re-tested rather than assumed to generalize.
 - [Phase 9 manuscript addendum](docs/PHASE9_MANUSCRIPT_ADDENDUM.md)
 - [Phase 9 workflow](.github/workflows/phase-9-universe-selection-regime.yml)
 - [Phase 9 error log](docs/ERROR_LOG_PHASE9.md)
+
+
+### Phase 9 broad intraday universe
+
+The +14.33% TCS result is now being re-tested on a **499-symbol overlapping Nifty500 universe** using the Ganesh Biyer 1-minute datasets from 2018-2025 and 2026, resampled to 15-minute bars. The analysis also tests whether liquidity, volatility, trend, beta/residual risk, market regime, breadth/dispersion and time-of-day explain MC success.
+
+Raw third-party data are runner-only; derived results and provenance are retained in the project.
