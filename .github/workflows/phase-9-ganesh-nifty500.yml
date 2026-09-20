@@ -19,7 +19,7 @@ jobs:
       - id: make
         shell: python
         run: |
-          import json, urllib.request
+          import json, os, urllib.request
           repos = ['ganeshbiyer/Nse_Historical_Data','ganeshbiyer/Nse_Historical_Data_2026']
           symbols = set()
           for repo in repos:
