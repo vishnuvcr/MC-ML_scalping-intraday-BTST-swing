@@ -1,0 +1,89 @@
+name: Phase 9 NSE Universe, Selection and Regime Analysis
+
+on:
+  push:
+    branches: [phase-9-universe-selection-regime]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      force_refresh:
+        description: Refresh cached external market data
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  broad_nse:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      HF_HOME: .cache/phase9/huggingface
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/cache@v4
+        with:
+          path: .cache/phase9
+          key: phase9-marketdata-v1
+      - name: Install dependencies
+        run: pip install -U numpy pandas pyarrow polars huggingface_hub anyio mcp statsmodels scikit-learn
+      - name: Download TejHQ NSE and BSE parquet years
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from huggingface_hub import hf_hub_download
+          base=Path("raw/tejhq")
+          base.mkdir(parents=True, exist_ok=True)
+          for ex in ["nse","bse"]:
+              for year in [2024,2025,2026]:
+                  rel=f"{ex}/year={year}/{ex}_{year}.parquet"
+                  try:
+                      p=hf_hub_download(
+                          repo_id="tejhq/indian-markets",
+                          filename=rel,
+                          repo_type="dataset",
+                          cache_dir=".cache/phase9/huggingface"
+                      )
+                      out=base/rel
+                      out.parent.mkdir(parents=True, exist_ok=True)
+                      if not out.exists():
+                          import shutil; shutil.copy2(p,out)
+                      print(rel, out.stat().st_size)
+                  except Exception as e:
+                      if year != 2026:
+                          raise
+                      print("Optional current-year file unavailable:", rel, repr(e))
+          PY
+      - name: Fetch NIFTY100 15-minute candles through public MCP
+        env:
+          MCP_START: "2024-01-01"
+          MCP_END: "2026-09-07"
+          MCP_OUT: "raw/nifty100_15m"
+        run: python scripts/phase9_mcp_15m_fetch.py
+      - name: Run Phase 9 analysis
+        run: |
+          python scripts/phase9_universe_regime_analysis.py             --daily-root raw/tejhq             --bse-root raw/tejhq             --mcp-root raw/nifty100_15m             --out research_results/phase9
+      - name: Write run manifest
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib, json
+          files=[]
+          for root in ["raw/tejhq","raw/nifty100_15m"]:
+              p=Path(root)
+              if not p.exists(): continue
+              for f in p.rglob("*"):
+                  if f.is_file():
+                      h=hashlib.sha256(f.read_bytes()).hexdigest()
+                      files.append({"path":str(f),"bytes":f.stat().st_size,"sha256":h})
+          Path("research_results/phase9").mkdir(parents=True,exist_ok=True)
+          Path("research_results/phase9/data_hash_manifest.json").write_text(json.dumps(files,indent=2))
+          PY
+      - name: Upload derived results only
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase9-universe-selection-regime
+          path: research_results/phase9
