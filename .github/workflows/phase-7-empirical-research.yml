@@ -1,0 +1,17 @@
+name: Phase 7 - Empirical Research
+
+on:
+  workflow_dispatch:
+
+jobs:
+  empirical:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate phase files
+        run: |
+          test -f docs/PHASE7_EMPIRICAL_PLAN.md
+          test -f docs/DATA_PROVENANCE_PHASE7.md
+          test -f docs/PHASE7_STATUS.md
+          test -f docs/ERROR_LOG_PHASE7.md
+          echo "Phase 7 protocol files present."
