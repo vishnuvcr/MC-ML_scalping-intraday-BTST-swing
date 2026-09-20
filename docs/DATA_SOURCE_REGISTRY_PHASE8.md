@@ -19,3 +19,8 @@ CROSS_SOURCE = independently reproduced or compared across two public sources.
 LICENSED_VALIDATED = licensed/verified dataset meeting the original protocol.
 
 Only LICENSED_VALIDATED supports a production/live-data equivalence claim.
+## Auxiliary candidate sources identified during expansion
+- TusharQLab/market-data: public GitHub pipeline for about 150 Nifty 200 stocks with 1-minute, 5-minute and 1-hour data and automated refresh.
+- vishalmdi/indian-stocks-mcp: public service advertising 117 NIFTY 100 stock symbols at 1-minute resolution with 6+ years and 187M+ candles, refreshed from Kaggle-backed sources.
+- SantoshSrinivas79/NSE-FNO-Data-bank: validated NSE F&O bhavcopy archive from April 2020 through August 2026; useful for official daily derivatives cross-check.
+- Kaggle ramamet4/nse-stocks-database: older 1-minute NIFTY 50 and Bank Nifty data for 2013-2016; historical robustness only.
