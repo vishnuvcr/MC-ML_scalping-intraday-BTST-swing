@@ -66,3 +66,7 @@ The 2026 repository contains 535 Parquet files and is being used as an independe
 ## Run-6 artifact disposition — 20 Sep 2026
 
 The 12 shard jobs in the initial Ganesh run completed, but the aggregate failed on a column-name error. Review of the uploaded shard outputs additionally identified corporate-action scale discontinuities and MC/position-accounting issues. Those outputs are retained only for debugging and are **not accepted as empirical results**. The corrected engine is synced in this branch and a fresh workflow artifact is required before Phase 9 can close.
+
+## Corrected-run disposition — 20 Sep 2026
+
+The corrected workflow completed successfully and produced the final artifact, but the artifact is **not accepted as empirical evidence**. Inspection of the 2026 signal panel found repeated mechanically implausible returns in individual symbols (for example ZFCVINDIA shows multiple approximately +500% / -83% moves). The current corporate-action detector only catches daily-open versus previous-close scale breaks and therefore misses some intraday discontinuities. Because the aggregate compounds equity, those bad observations contaminate universe-level means and MC results. The entire aggregate is quarantined pending an intraday scale-break correction and fresh rerun.
