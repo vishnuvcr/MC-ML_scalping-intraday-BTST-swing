@@ -1,0 +1,50 @@
+name: Phase 9 Fast Full NSE Daily
+
+concurrency:
+  group: phase9-fast-daily-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  push:
+    branches: [phase-9-universe-selection-regime]
+  workflow_dispatch:
+
+jobs:
+  fast_daily:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/cache@v4
+        with:
+          path: .cache/phase9fast
+          key: phase9-fast-daily-marketdata-v1
+      - name: Install dependencies
+        run: pip install -U numpy pandas pyarrow statsmodels huggingface_hub
+      - name: Download TejHQ NSE and synchronized BSE
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from huggingface_hub import hf_hub_download
+          import shutil
+          base=Path('raw/tejhq'); base.mkdir(parents=True,exist_ok=True)
+          for ex,start_year in [('nse',2018),('bse',2024)]:
+              for year in range(start_year,2027):
+                  rel=f'{ex}/year={year}/{ex}_{year}.parquet'
+                  try:
+                      p=hf_hub_download(repo_id='tejhq/indian-markets',filename=rel,repo_type='dataset',cache_dir='.cache/phase9fast')
+                      out=base/rel; out.parent.mkdir(parents=True,exist_ok=True); shutil.copy2(p,out)
+                  except Exception as e:
+                      if year<2026: raise
+                      print('optional',rel,repr(e))
+          PY
+      - name: Run optimized full-NSE daily analysis
+        run: python scripts/phase9_fast_daily.py --daily-root raw/tejhq --out research_results/phase9_fast_daily
+      - name: Upload derived results
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase9-fast-full-nse-daily
+          path: research_results/phase9_fast_daily
