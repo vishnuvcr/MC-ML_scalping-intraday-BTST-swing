@@ -27,7 +27,7 @@ jobs:
           from huggingface_hub import hf_hub_download
           base=Path("raw/tejhq"); base.mkdir(parents=True,exist_ok=True)
           for ex in ["nse","bse"]:
-              for year in [2024,2025,2026]:
+              for year in range(2018,2027):
                   rel=f"{ex}/year={year}/{ex}_{year}.parquet"
                   try:
                       p=hf_hub_download(repo_id="tejhq/indian-markets",filename=rel,repo_type="dataset",cache_dir=".cache/phase9daily")
