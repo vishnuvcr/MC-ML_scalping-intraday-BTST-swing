@@ -58,15 +58,18 @@ jobs:
                       print("Optional current-year file unavailable:", rel, repr(e))
           PY
       - name: Fetch NIFTY100 15-minute candles through public MCP
+        continue-on-error: true
         env:
           MCP_START: "2024-01-01"
           MCP_END: "2026-04-08"
           MCP_OUT: "raw/nifty100_15m"
         run: python scripts/phase9_mcp_15m_fetch.py
       - name: Run Phase 9 analysis
+        if: always()
         run: |
           python scripts/phase9_universe_regime_analysis.py             --daily-root raw/tejhq             --bse-root raw/tejhq             --mcp-root raw/nifty100_15m             --out research_results/phase9
       - name: Write run manifest
+        if: always()
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -83,6 +86,7 @@ jobs:
           Path("research_results/phase9/data_hash_manifest.json").write_text(json.dumps(files,indent=2))
           PY
       - name: Upload derived results only
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: phase9-universe-selection-regime
