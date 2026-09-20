@@ -213,3 +213,49 @@ For the specific question of whether Monte Carlo can be significantly used to tr
 
 ## Final research status
 **Stopped at the pre-defined empirical gate on 20 September 2026.** The next research step is data acquisition/validation, not strategy invention or parameter optimization.
+
+
+## 15. Phase 7 empirical continuation requested by the user
+
+The empirical gate was reopened using a secondary public OHLCV dataset from the MIT-licensed `scriptkidakash81/stocks-data` research pipeline, which documents Yahoo Finance as its market-data source. Because the available 1-minute files were too large for the repository-fetch interface, 15-minute bars were used as a scalping proxy. This means the short-horizon results are not equivalent to tick/1-minute microstructure evidence.
+
+### 15.1 Final common candidate framework
+The primary candidate used:
+- EMA(20/26) crossover for short horizons;
+- EMA(20/21) crossover for daily horizons;
+- ATR(14) stop;
+- next-bar/day-open entry;
+- fixed maximum holding period;
+- Monte Carlo gate based on the last 30 net trades, 250 bootstrap resamples, and a 50% positive-path threshold once at least 20 prior trades exist;
+- full transaction-cost treatment from the study cost engine.
+
+### 15.2 Scalping proxy
+For TCS, the 15-minute version with a 4-bar maximum hold and 1.5 ATR stop produced validation return of +0.74% (PF 1.14, 32 trades) and subsequent out-of-sample return of +5.59% (PF 1.71, Sharpe 1.17, maximum drawdown -2.94%, 40 trades).
+
+This is the strongest short-horizon candidate from the screen, but it is not a validated true scalping strategy because bid/ask, latency, partial fills and 1-minute/tick data were not available.
+
+### 15.3 Intraday
+For TCS, the same EMA framework with a 20-bar maximum hold produced validation return of +3.00% (PF 1.49, 33 trades) and subsequent out-of-sample return of +14.33% (PF 2.87, Sharpe 2.10, maximum drawdown -1.92%, 40 trades).
+
+This result is promising within the tested sample but is concentrated in one stock and one 15-minute dataset window. It therefore remains a research candidate rather than a live-validated system.
+
+### 15.4 BTST correction and result
+A previous daily experiment incorrectly reused an 8-session holding period for both BTST and swing. The BTST analysis was re-run correctly as exactly one overnight holding period: enter at the next session open after the signal and exit at that next session close.
+
+The corrected results did not persist out of sample. For example, HDFCBANK had +7.54% validation return (PF 3.56) but -2.50% subsequent test return (PF 0.53). TCS had +0.39% validation and -9.35% test. No BTST strategy is therefore classified as usable.
+
+### 15.5 Swing
+The daily EMA(20/21), 8-session maximum-hold candidate produced HDFCBANK validation return of +6.75% (PF 1.38) and subsequent test return of +0.94% (PF 1.08, Sharpe 0.15). This is a weak positive observation, not robust evidence of deployable profitability.
+
+Other stocks were heterogeneous, and SBIN's strong validation result did not persist into the test period. This prevents a universal swing-strategy claim.
+
+### 15.6 Monte Carlo contribution
+Across the tested families, the Monte Carlo gate usually reduced the number of trades and sometimes reduced drawdown. It did not consistently improve raw return. In the TCS intraday candidate, the MC component should therefore be interpreted mainly as a participation/risk filter rather than as the source of alpha.
+
+### 15.7 Rejected 52-week-high experiment
+A separate 52-week-high/momentum screen generated very large apparent returns on several symbols. It was rejected after identifying an invalid accounting design: overlapping positions were treated as sequentially compounded fixed-notional trades. That can dramatically inflate reported capital growth. The entire result is excluded from the research conclusion.
+
+### 15.8 Final empirical conclusion
+The requested finite empirical extension is complete. **No single cost-aware, out-of-sample-robust strategy was established across scalping, intraday, BTST and swing.** The strongest remaining research candidate is the TCS 15-minute EMA20/26 intraday system with the Monte Carlo gate. It is not sufficient to establish a general stock-trading strategy because of the single-symbol concentration, limited 15-minute history, lack of bid/ask/tick execution data and absence of a broad independent holdout.
+
+The research therefore stops here rather than continue searching indicators on the same sample. That stop preserves the statistical validity of the project. A genuinely stronger next step would require new data—1-minute/tick/bid-ask history and a broader point-in-time stock universe—rather than additional parameter mining.
