@@ -17,3 +17,8 @@ Private chain-of-thought is not copied into project files. This log records requ
 
 ## 2026-09-20 — final synthesis
 The finite public-data protocol was closed. Phase 8 cross-source daily replication failed the robustness gate at 5 bps/leg. The final manuscript, evidence gate, cross-market script/workflow, final synthesis workflow and status artifacts were synchronized to main. No universal live-ready strategy was promoted.
+## 2026-09-20 — global-market scope correction and Phase 10
+
+User clarified that cross-market inefficiency includes global markets, not only NSE/BSE. The research scope was amended accordingly. A 2010–2022 pilot and an independent 2006–2026 global-index pilot were evaluated; the global-consensus hypothesis is now frozen for OOS testing rather than being further tuned.
+
+During Phase 9 troubleshooting, the initial Ganesh Nifty500 aggregate was found invalid because of an mc_return/mc_ret column mismatch and additional corporate-action / accounting defects. Those corrections were logged and synced before further empirical claims.
