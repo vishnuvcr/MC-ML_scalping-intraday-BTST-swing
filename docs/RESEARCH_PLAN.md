@@ -59,3 +59,6 @@ Brokerage per executed order, statutory charges, spread, slippage, order type, l
 - Data hashes and schema versions recorded.
 - Cached data preferred over repeated downloads subject to licensing.
 - Every material outcome and error appended to project logs.
+
+## Stop condition added 2026-09-20
+If the required licensed or otherwise valid market data cannot be acquired without violating source terms, the study stops at the empirical gate. The final report must then distinguish validated methodological/software findings from unestimated stock-level profitability. No synthetic-data result may be presented as evidence of live-market profitability.
