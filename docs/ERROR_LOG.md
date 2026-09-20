@@ -29,3 +29,9 @@ A preliminary momentum experiment allowed overlapping positions while sequential
 
 ## E0010 — Available repository-fetch interface could not return the very large 1-minute files
 The accessible 1-minute file existed in the public research dataset but exceeded the file-fetch interface limit. Resolution: use 15-minute data as a clearly labelled scalping proxy and do not claim true tick/1-minute scalping validation.
+
+
+## E0021 — 2026-09-20
+Status: controlled limitation.
+The available GitHub interface can create/push workflows but cannot manually dispatch a workflow run; the research therefore treats the workflow as reproducibility infrastructure and does not claim its artifact has executed until a run is observable.
+Correction: use independently accessible public-source replication for interim evidence and retain the manual workflow for runner execution.
