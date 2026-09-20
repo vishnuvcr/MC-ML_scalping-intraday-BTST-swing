@@ -47,9 +47,22 @@ jobs:
           path: external/ganesh_2026
           fetch-depth: 1
       - name: Install dependencies
-        run: pip install -U numpy pandas pyarrow statsmodels scipy
+        run: pip install -U numpy pandas pyarrow statsmodels scipy huggingface_hub
+      - name: Download synchronized TejHQ NSE/BSE daily files
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from huggingface_hub import hf_hub_download
+          import shutil
+          base=Path('external/tejhq'); base.mkdir(parents=True,exist_ok=True)
+          for ex,start in [('nse',2024),('bse',2024)]:
+              for year in [2024,2025,2026]:
+                  rel=f'{ex}/year={year}/{ex}_{year}.parquet'
+                  p=hf_hub_download(repo_id='tejhq/indian-markets',filename=rel,repo_type='dataset',cache_dir='.cache/phase9_tejhq')
+                  out=base/rel; out.parent.mkdir(parents=True,exist_ok=True); shutil.copy2(p,out)
+          PY
       - name: Run frozen 15-minute replication on overlapping Nifty500 universe
-        run: python scripts/phase9_ganesh_nifty500_intraday.py --old-root external/ganesh_2018_2025 --new-root external/ganesh_2026 --out research_results/phase9_ganesh_nifty500
+        run: python scripts/phase9_ganesh_nifty500_intraday.py --old-root external/ganesh_2018_2025 --new-root external/ganesh_2026 --tej-root external/tejhq --out research_results/phase9_ganesh_nifty500
       - name: Upload derived results only
         uses: actions/upload-artifact@v4
         with:
