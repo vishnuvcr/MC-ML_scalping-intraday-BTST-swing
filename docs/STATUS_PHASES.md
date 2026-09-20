@@ -37,3 +37,8 @@ See [manuscript/FINAL_RESEARCH_REPORT.md](../manuscript/FINAL_RESEARCH_REPORT.md
 - 1-minute/tick/bid-ask data for scalping/intraday.
 - Broader point-in-time NSE/BSE universe for BTST/swing.
 - Independent future holdout and execution-quality measurement.
+
+
+## Phase 9 — universe, stock-selection, regime and cross-market analysis
+
+**Status: ACTIVE.** The TCS +14.33% result is explicitly treated as single-stock evidence. Phase 9 now tests the frozen framework on an exact NIFTY-100 15-minute panel plus the full available NSE daily universe, with pre-specified liquidity/volatility/trend/regime/cross-market factors. See [PHASE9_PLAN.md](PHASE9_PLAN.md), [PHASE9_RESULTS.md](PHASE9_RESULTS.md), and [PHASE9_MANUSCRIPT_ADDENDUM.md](PHASE9_MANUSCRIPT_ADDENDUM.md).
