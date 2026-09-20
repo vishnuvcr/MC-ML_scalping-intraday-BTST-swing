@@ -38,7 +38,8 @@ jobs:
           base=Path("raw/tejhq")
           base.mkdir(parents=True, exist_ok=True)
           for ex in ["nse","bse"]:
-              for year in range(2018,2027):
+              start_year=2018 if ex=="nse" else 2024
+              for year in range(start_year,2027):
                   rel=f"{ex}/year={year}/{ex}_{year}.parquet"
                   try:
                       p=hf_hub_download(
