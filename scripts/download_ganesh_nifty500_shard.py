@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import argparse, json, os, shutil, time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from urllib.request import Request, urlopen
 from urllib.error import HTTPError, URLError
@@ -44,11 +45,16 @@ def main():
     ref_dir.mkdir(parents=True, exist_ok=True)
 
     failures = []
-    for symbol in symbols:
+    def one(symbol):
         ok = fetch(f"{BASE}/{symbol}.parquet", base_dir / f"{symbol}.parquet")
         y26 = fetch(f"{Y2026}/{symbol}.parquet", y26_dir / f"{symbol}.parquet")
-        if not ok and not y26:
-            failures.append({"symbol": symbol, "error": "missing from both Ganesh repos"})
+        return symbol, ok, y26
+    with ThreadPoolExecutor(max_workers=8) as ex:
+        futures = [ex.submit(one, s) for s in symbols]
+        for fut in as_completed(futures):
+            symbol, ok, y26 = fut.result()
+            if not ok and not y26:
+                failures.append({"symbol": symbol, "error": "missing from both Ganesh repos"})
 
     base_idx = ref_dir / "NIFTY50-base.parquet"
     y26_idx = ref_dir / "NIFTY50-2026.parquet"
