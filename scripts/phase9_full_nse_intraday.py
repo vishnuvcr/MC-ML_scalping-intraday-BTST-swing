@@ -132,7 +132,16 @@ def main():
         except Exception: pass
     p=pd.DataFrame(panel)
     if not p.empty:
-        p['signal_date']=pd.to_datetime(p.signal_date); p['breadth']=p.signal_date.map(lambda d:(breadth.get(str(d.date())) or [0,0,np.nan,np.nan])[1]/max((breadth.get(str(d.date())) or [0])[0],1)); p['dispersion']=p.signal_date.map(lambda d:(lambda st: math.sqrt(max(st[3]/st[0]-(st[2]/st[0])**2,0)) if st and st[0] else np.nan)(breadth.get(str(d.date()))); p['market_vol20']=p.signal_date.map(lambda d:(market.get(str(d.date())) or {}).get('market_vol20')); p['market_trend20']=p.signal_date.map(lambda d:(market.get(str(d.date())) or {}).get('market_trend20'))
+        p['signal_date']=pd.to_datetime(p.signal_date)
+        reg=[]
+        for dt,st in breadth.items():
+            n=st[0]; mean=st[2]/n if n else np.nan; var=max(st[3]/n-mean*mean,0) if n else np.nan
+            reg.append({'date':pd.Timestamp(dt),'breadth_raw':st[1]/n if n else np.nan,'dispersion_raw':math.sqrt(var) if np.isfinite(var) else np.nan})
+        regdf=pd.DataFrame(reg).sort_values('date')
+        regdf['breadth']=regdf['breadth_raw'].shift(1); regdf['dispersion']=regdf['dispersion_raw'].shift(1)
+        p=p.merge(regdf[['date','breadth','dispersion']],left_on='signal_date',right_on='date',how='left').drop(columns=['date'])
+        p['market_vol20']=p.signal_date.map(lambda d:(market.get(str(d.date())) or {}).get('market_vol20'))
+        p['market_trend20']=p.signal_date.map(lambda d:(market.get(str(d.date())) or {}).get('market_trend20'))
         p.to_csv(out/'signal_panel.csv',index=False);
         qs=[]
         for c in ['adv20','adv60','vol20','atr_pct','trend','mom20','vol_z','gap','market_vol20','market_trend20','breadth','dispersion']:
