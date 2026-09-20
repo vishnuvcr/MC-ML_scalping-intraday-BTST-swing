@@ -68,3 +68,11 @@ The GitHub Actions workflow is configured to:
 - upload a reproducible result artifact.
 
 Until that workflow is executed, the public-source expansion remains partially complete rather than fully closed.
+
+## Phase 8.1 cross-market replication update — 20 Sep 2026
+
+An independently accessible BSE panel covering 19 requested project symbols for 2023-2025 produced negative 2025 test medians under the frozen EMA20/21 daily rules at 5 bps/leg: BTST median -2.94% with 4/19 positive symbols and median PF 0.13; swing median -3.28% with 6/19 positive symbols and median PF 0.45. The Monte-Carlo gate was not materially exercised because most symbols did not reach the 20-trade warm-up; this is recorded as a limitation.
+
+A separate 20-symbol historical NSE panel (roughly 2012-2022, test 2019-2022) was also fetched and screened. Its first exploratory aggregation exposed a non-finite-summary handling error, which is now corrected in the reproducible workflow. Those exploratory NSE aggregate values are not treated as final evidence; the workflow artifact is authoritative.
+
+**Phase 8 decision status:** no cost-aware, cross-source universal BTST/swing strategy has been established. Continue only through the finite pre-planned validation/failure-mechanism path, not open-ended indicator mining.
