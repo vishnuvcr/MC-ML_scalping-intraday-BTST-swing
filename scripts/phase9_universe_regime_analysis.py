@@ -7,7 +7,7 @@ import statsmodels.api as sm
 
 FRICTION = 5.0
 TEST_START = "2025-01-01"
-TEST_END = "2026-09-07"
+TEST_END = "2026-04-08"
 
 def ema(s,n): return s.ewm(span=n, adjust=False, min_periods=n).mean()
 def atr(df,n=14):
