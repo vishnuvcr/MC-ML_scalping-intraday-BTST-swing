@@ -52,3 +52,37 @@ These calculations are descriptive split-sample diagnostics, not proof of a trad
 ## Execution status — 20 Sep 2026
 
 The first Phase 10 Actions runs failed in the OOS artifact-download path because the workflow expression was malformed and the pilot path did not need that artifact. This was an infrastructure failure, not a market-data result. The workflow has been simplified to a deterministic pilot-only run; OOS joining is intentionally deferred until the corrected Phase 9 authoritative artifact exists.
+
+## 5. Fresh full-period workflow result — 20 Sep 2026
+
+The corrected Phase 10 pilot completed successfully using Yahoo Finance/yfinance data through **18 Sep 2026**.
+
+The pre-specified rule remains unchanged: **prior-session five-market sign consensus >= +3**.
+
+### NIFTY 50
+
+| Split | All days | Consensus >= +3 | Consensus <= -3 | High-minus-low |
+|---|---:|---:|---:|---:|
+| Train 2006–2023 | +0.0488% | +0.5580% | -0.6068% | +1.1649 pp |
+| Validation 2024–2025 | +0.0406% | +0.2536% | -0.3111% | +0.5647 pp |
+| Test 2026 through 18 Sep | -0.1090% | **+0.2962%** | -0.5312% | **+0.8274 pp** |
+
+The 2026 test contains 48 high-consensus observations and 36 low-consensus observations. The positive high-consensus mean therefore survives into the currently available 2026 forward sample, unlike the earlier independent dataset that ended in February and had only 11 high-consensus observations.
+
+### SENSEX
+
+| Split | All days | Consensus >= +3 | Consensus <= -3 | High-minus-low |
+|---|---:|---:|---:|---:|
+| Train 2006–2023 | +0.0541% | +0.5652% | -0.6258% | +1.1910 pp |
+| Validation 2024–2025 | +0.0365% | +0.2528% | -0.3020% | +0.5549 pp |
+| Test 2026 through 18 Sep | -0.1202% | **+0.2709%** | -0.5315% | **+0.8025 pp** |
+
+### Interpretation
+
+This is materially stronger evidence for the **global-information hypothesis** than the February-only snapshot. The direction is consistent across NIFTY 50 and SENSEX and across train, validation and the currently available 2026 test.
+
+However, this remains a **market-index conditioning result**, not a completed trading strategy. It has not yet been demonstrated that the filter increases the net expectancy of the stock-level EMA20/26 strategy after realistic execution costs. That requires joining the global feature to the corrected Phase 9 stock-level trade panel.
+
+A crude 20-bps round-trip subtraction from the 2026 high-consensus index means gives approximately +0.096 percentage points for NIFTY 50 and +0.071 percentage points for SENSEX. This is only a stress illustration; it is not the final execution-cost model.
+
+**Phase 10 conclusion is therefore: GLOBAL FILTER = PROMISING, NOT YET PROMOTED.**
