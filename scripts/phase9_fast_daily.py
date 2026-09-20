@@ -158,17 +158,17 @@ def main():
         p=p.merge(fp.drop(columns=["ret","mc"],errors="ignore"),on=["symbol","signal_date"],how="left")
         p["mc_accept"]=p["ret_mc"].notna().astype(int)
         # Point-in-time stock-selection metrics.
-        panel["liq_rank"]=panel.groupby("signal_date")["adv20"].rank(method="first",ascending=False)
-        panel["liq_top500"]=(panel["liq_rank"]<=500).astype(int)
-        panel["liq_quintile"]=panel.groupby("signal_date")["adv20"].transform(lambda s:pd.qcut(s.rank(method="first"),5,labels=False,duplicates="drop")+1)
+        p["liq_rank"]=p.groupby("signal_date")["adv20"].rank(method="first",ascending=False)
+        p["liq_top500"]=(p["liq_rank"]<=500).astype(int)
+        p["liq_quintile"]=p.groupby("signal_date")["adv20"].transform(lambda s:pd.qcut(s.rank(method="first"),5,labels=False,duplicates="drop")+1)
         selection={}
-        for label,sub in {"all":panel,"top500":panel[panel.liq_top500==1]}.items():
+        for label,sub in {"all":p,"top500":p[p.liq_top500==1]}.items():
             selection[label]={
                 "signals":int(len(sub)),
                 "mc_accept_rate":float(sub.mc_accept.mean()) if len(sub) else None,
-                "baseline_mean_return_pct":float(sub.baseline_ret.mean()*100) if len(sub) else None,
-                "mc_mean_return_pct":float(sub.mc_ret.dropna().mean()*100) if sub.mc_ret.notna().any() else None,
-                "mc_win_rate":float((sub.mc_ret.dropna()>0).mean()) if sub.mc_ret.notna().any() else None
+                "baseline_mean_return_pct":float(sub.ret_base.mean()*100) if len(sub) else None,
+                "mc_mean_return_pct":float(sub.ret_mc.dropna().mean()*100) if sub.ret_mc.notna().any() else None,
+                "mc_win_rate":float((sub.ret_mc.dropna()>0).mean()) if sub.ret_mc.notna().any() else None
             }
         Path(out/"selection_experiment.json").write_text(json.dumps(selection,indent=2))
         factors=[]
