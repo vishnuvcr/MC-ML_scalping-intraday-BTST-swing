@@ -1,0 +1,21 @@
+name: Phase 3 - Baselines and Monte Carlo
+
+on:
+  workflow_dispatch:
+
+jobs:
+  methods:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install test dependencies
+        run: python -m pip install --upgrade pip pytest numpy pandas
+      - name: Run Monte Carlo tests
+        run: python -m pytest -q test_monte_carlo.py
+      - name: Compile baseline modules
+        run: python -m py_compile research_baselines.py research_monte_carlo.py research_cost_engine.py
