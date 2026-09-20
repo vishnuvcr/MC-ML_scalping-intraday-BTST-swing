@@ -140,3 +140,17 @@ Factor/bin thresholds may be estimated on train+validation, but any conditional 
 ## Broad intraday universe amendment
 
 Because the hosted NIFTY100 MCP is a narrower panel, an independent broad-minute source is now part of Phase 9. The MIT minute dataset covers 2,500+ NSE stocks and states 99.4% coverage of active/suspended NSE equities. The frozen EMA20/26 15-minute rule is resampled from 1-minute candles. The independent intraday test ends at 2026-01-21, the last displayed minute-data date in the dataset card. No parameters are changed to match that date. 
+
+
+## Ganesh Nifty500 execution phase
+
+The primary short-horizon replication is now defined as the 499-symbol intersection between the 2018-2025 and 2026 Ganesh Nifty500 panels. This avoids silently treating 2026-only symbols as if they had a full pre-test history. The 499-stock panel is the main exact 1-minute-to-15-minute replication.
+
+The test design is:
+- Train: 2018-2023.
+- Validation: 2024-2025.
+- Primary OOS replication: 2026-01-01 through 2026-04-30, matching the earlier Phase 8 test window.
+- Secondary holdout: 2026-05-01 through the 2026 dataset maximum.
+
+The strategy remains frozen: EMA20/26 long/short, ATR14, 1.5 ATR stop, 20-bar max hold, next-bar-open entry, equity-capped sizing, and the 250-path/50%-positive Monte Carlo gate.
+
