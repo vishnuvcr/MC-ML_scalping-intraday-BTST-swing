@@ -47,3 +47,8 @@ See [manuscript/FINAL_RESEARCH_REPORT.md](../manuscript/FINAL_RESEARCH_REPORT.md
 ## Phase 9.1 — Ganesh Nifty500 intraday replication
 
 **Status: ACTIVE.** A 499-symbol intersection of the 2018-2025 and 2026 Ganesh Nifty500 1-minute datasets is now the primary exact broad-intraday replication panel. The frozen TCS 15-minute EMA20/26 candidate is being tested across the panel with stock-selection, liquidity, volatility, trend, beta/residual-risk, market-regime, breadth/dispersion and time-of-day factors. See [Phase 9 plan](PHASE9_PLAN.md) and [Ganesh source registry](DATA_SOURCE_REGISTRY_PHASE9.md).
+
+
+## Phase 9.2 — 2026-only Nifty500 forward path
+
+**Status: ACTIVE.** Uses the 535-file 2026 Ganesh Nifty500 1-minute panel and the frozen EMA20/26 intraday system. It splits 2026 into an early calibration window, March-April primary conditional test, and May-onward holdout; lagged NSE-BSE basis from TejHQ is included as a pre-trade factor. No result is accepted until the workflow completes.
