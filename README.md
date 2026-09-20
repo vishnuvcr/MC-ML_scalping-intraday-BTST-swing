@@ -61,3 +61,11 @@ These are public-data replication results, not exchange-grade live-trading evide
 **Phase 8 is complete under the finite public-data protocol.** The historical NSE and independent BSE daily replications both failed the robustness gate at 5 bps/leg for the frozen BTST/swing EMA framework. The strongest short-horizon result remains the TCS 15-minute intraday candidate, which is not live-validated or universal.
 
 Final artifacts: [final manuscript](manuscript/FINAL_RESEARCH_REPORT.md), [evidence gate](docs/FINAL_EVIDENCE_GATE_PHASE8.md), [final error log](docs/ERROR_LOG_PHASE8_FINAL.md), [phase status](docs/STATUS_PHASES.md), and [manual final-synthesis workflow](.github/workflows/phase-8-final-synthesis.yml).
+
+## Phase 10 — Global-market inefficiency extension
+
+Phase 10 is now the active research extension. “Cross-market inefficiency” explicitly includes global markets, not only NSE/BSE. The frozen candidate is a prior-session five-market global sign-consensus filter on the existing Indian EMA20/26 intraday framework.
+
+See the working Phase 10 branch for the [plan](https://github.com/vishnuvcr/MC-ML_scalping-intraday-BTST-swing/blob/phase-10-global-market-inefficiency/docs/PHASE10_PLAN.md), [results](https://github.com/vishnuvcr/MC-ML_scalping-intraday-BTST-swing/blob/phase-10-global-market-inefficiency/docs/PHASE10_RESULTS.md), [error log](https://github.com/vishnuvcr/MC-ML_scalping-intraday-BTST-swing/blob/phase-10-global-market-inefficiency/docs/ERROR_LOG_PHASE10.md), and [manual workflow](https://github.com/vishnuvcr/MC-ML_scalping-intraday-BTST-swing/blob/phase-10-global-market-inefficiency/.github/workflows/phase-10-global-market-inefficiency.yml).
+
+The first global pilots show historical lead/lag associations, but no global filter is promoted yet; the corrected Phase 9 Nifty500 engine also requires a fresh authoritative workflow artifact before its broad intraday results can be accepted.
