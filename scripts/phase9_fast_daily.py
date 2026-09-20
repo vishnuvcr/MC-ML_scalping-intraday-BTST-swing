@@ -146,8 +146,6 @@ def main():
                     except KeyError: continue
                     rec={**t,"symbol":symbol,"mc":tag}
                     for k in ["adv20","adv60","vol20","atr_pct","trend","mom20","vol_z","gap","breadth","dispersion","market_vol20","market_trend20","basis_lag1"]:
-                        rec[k]=f[k]
-                    for k in ["basis_lag1","breadth","dispersion"]:
                         rec[k]=f.get(k,np.nan)
                     feature_rows.append(rec)
     pd.DataFrame(rows).to_json(out/"full_nse_daily_results.json",orient="records",indent=2)
@@ -172,22 +170,33 @@ def main():
             }
         Path(out/"selection_experiment.json").write_text(json.dumps(selection,indent=2))
         factors=[]
-        for col in ["adv20","adv60","vol20","atr_pct","trend","mom20","vol_z","gap","breadth","dispersion","basis_lag1"]:
-            q=p[[col,"ret_base","ret_mc"]].dropna().copy()
+        factor_cols=["adv20","adv60","vol20","atr_pct","trend","mom20","vol_z","gap","breadth","dispersion","market_vol20","market_trend20","basis_lag1"]
+        for col in factor_cols:
+            q=p[[col,"ret_base","ret_mc","mc_accept"]].replace([np.inf,-np.inf],np.nan).dropna(subset=[col,"ret_base"]).copy()
             if q.empty: continue
             q["q"]=pd.qcut(q[col],5,labels=False,duplicates="drop")+1
             for k,gq in q.groupby("q"):
-                factors.append({"factor":col,"quintile":int(k),"n":len(gq),"mean_base":float(gq.ret_base.mean()),"mean_mc":float(gq.ret_mc.mean()),"mean_delta":float((gq.ret_mc-gq.ret_base).mean()),"mc_better_rate":float((gq.ret_mc>gq.ret_base).mean())})
+                accepted=gq.dropna(subset=["ret_mc"])
+                factors.append({"factor":col,"quintile":int(k),"n":len(gq),"mc_accept_rate":float(gq.mc_accept.mean()),"baseline_mean_ret":float(gq.ret_base.mean()),"mc_mean_ret_conditional":float(accepted.ret_mc.mean()) if len(accepted) else np.nan,"mc_delta_conditional":float((accepted.ret_mc-accepted.ret_base).mean()) if len(accepted) else np.nan,"mc_better_rate_conditional":float((accepted.ret_mc>accepted.ret_base).mean()) if len(accepted) else np.nan})
         pd.DataFrame(factors).to_csv(out/"factor_quintiles.csv",index=False); p.to_csv(out/"trade_factor_panel.csv",index=False)
-        X=p[[c for c in ["adv20","vol20","atr_pct","trend","mom20","vol_z","gap","breadth","dispersion","basis_lag1"] if c in p]].replace([np.inf,-np.inf],np.nan)
-        m=p[["ret_base","ret_mc"]].dropna().copy(); m["delta"]=m.ret_mc-m.ret_base
-        common=pd.concat([X,m],axis=1).dropna()
+        reg_cols=[x for x in factor_cols if x in p.columns]
+        reg_result={}
+        try:
+            z=p[reg_cols+["mc_accept"]].replace([np.inf,-np.inf],np.nan).dropna()
+            X=z[reg_cols].copy()
+            for col in reg_cols:
+                s=X[col].std(); X[col]=(X[col]-X[col].mean())/(s if np.isfinite(s) and s else 1)
+            glm=sm.GLM(z.mc_accept.astype(float),sm.add_constant(X,has_constant="add"),family=sm.families.Binomial()).fit(cov_type="HC3")
+            reg_result["mc_acceptance"]={"n":len(z),"params":{k:float(v) for k,v in glm.params.items()},"pvalues":{k:float(v) for k,v in glm.pvalues.items()}}
+        except Exception as exc: reg_result["mc_acceptance_error"]=repr(exc)
+        common=p[reg_cols+["ret_base","ret_mc"]].replace([np.inf,-np.inf],np.nan).dropna()
         if len(common)>=50:
-            Xs=common[X.columns].copy()
-            for col in X.columns:
+            Xs=common[reg_cols].copy()
+            for col in reg_cols:
                 s=Xs[col].std(); Xs[col]=(Xs[col]-Xs[col].mean())/(s if np.isfinite(s) and s else 1)
-            mod=sm.OLS(common.delta,sm.add_constant(Xs,has_constant="add")).fit(cov_type="HC3")
-            Path(out/"conditional_regression.json").write_text(json.dumps({"n":len(common),"r2":float(mod.rsquared),"params":{k:float(v) for k,v in mod.params.items()},"pvalues":{k:float(v) for k,v in mod.pvalues.items()}},indent=2))
+            mod=sm.OLS(common.ret_mc-common.ret_base,sm.add_constant(Xs,has_constant="add")).fit(cov_type="HC3")
+            reg_result["mc_delta_conditional"]={"n":len(common),"r2":float(mod.rsquared),"params":{k:float(v) for k,v in mod.params.items()},"pvalues":{k:float(v) for k,v in mod.pvalues.items()}}
+        Path(out/"conditional_regression.json").write_text(json.dumps(reg_result,indent=2))
     if not f.empty:
         acceptance=f.groupby("symbol")["mc"].mean().rename("mc_accept_rate").reset_index()
         acceptance.to_csv(out/"symbol_mc_acceptance.csv",index=False)
