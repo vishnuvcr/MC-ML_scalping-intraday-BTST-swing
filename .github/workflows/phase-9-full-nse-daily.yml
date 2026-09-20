@@ -1,0 +1,47 @@
+name: Phase 9 Full NSE Daily Selection and Regime
+
+on:
+  push:
+    branches: [phase-9-universe-selection-regime]
+  workflow_dispatch:
+
+jobs:
+  daily:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/cache@v4
+        with:
+          path: .cache/phase9daily
+          key: phase9-daily-marketdata-v1
+      - name: Install dependencies
+        run: pip install -U numpy pandas pyarrow statsmodels
+      - name: Download TejHQ NSE and BSE parquet
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from huggingface_hub import hf_hub_download
+          base=Path("raw/tejhq"); base.mkdir(parents=True,exist_ok=True)
+          for ex in ["nse","bse"]:
+              for year in [2024,2025,2026]:
+                  rel=f"{ex}/year={year}/{ex}_{year}.parquet"
+                  try:
+                      p=hf_hub_download(repo_id="tejhq/indian-markets",filename=rel,repo_type="dataset",cache_dir=".cache/phase9daily")
+                      out=base/rel; out.parent.mkdir(parents=True,exist_ok=True)
+                      import shutil; shutil.copy2(p,out)
+                  except Exception as e:
+                      if year<2026: raise
+                      print("optional",rel,repr(e))
+          PY
+      - name: Run full-NSE daily analysis
+        run: |
+          python scripts/phase9_universe_regime_analysis.py             --daily-root raw/tejhq             --bse-root raw/tejhq             --out research_results/phase9_daily
+      - name: Upload daily results
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase9-full-nse-daily-results
+          path: research_results/phase9_daily
