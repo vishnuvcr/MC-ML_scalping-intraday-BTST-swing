@@ -27,14 +27,15 @@ jobs:
           from huggingface_hub import hf_hub_download
           base=Path("raw/tejhq"); base.mkdir(parents=True,exist_ok=True)
           for ex in ["nse","bse"]:
-              for year in range(2018,2027):
+              start_year=2018 if ex=="nse" else 2024
+              for year in range(start_year,2027):
                   rel=f"{ex}/year={year}/{ex}_{year}.parquet"
                   try:
                       p=hf_hub_download(repo_id="tejhq/indian-markets",filename=rel,repo_type="dataset",cache_dir=".cache/phase9daily")
                       out=base/rel; out.parent.mkdir(parents=True,exist_ok=True)
                       import shutil; shutil.copy2(p,out)
                   except Exception as e:
-                      if year<2026: raise
+                      if (ex=="nse" and year<2026) or (ex=="bse" and year<2026): raise
                       print("optional",rel,repr(e))
           PY
       - name: Run full-NSE daily analysis
