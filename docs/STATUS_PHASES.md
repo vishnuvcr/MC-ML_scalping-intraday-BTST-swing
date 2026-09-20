@@ -7,15 +7,14 @@ Updated: 2026-09-20
 - Phase 2 — Data and execution-cost engine: PARTIALLY COMPLETE
 - Phase 3 — Baselines and Monte Carlo methods: COMPLETE
 - Phase 4 — Backtests and statistical inference: DESIGN COMPLETE / EMPIRICAL EXECUTION BLOCKED
-- Phase 5 — Robustness and regime analysis: NOT EXECUTED (data-gated)
+- Phase 5 — Robustness and regime analysis: DESIGN COMPLETE / EMPIRICAL EXECUTION BLOCKED
 - Phase 6 — Final synthesis and manuscript: PENDING
 
-## Phase 4 outputs
-- Statistical inference plan frozen.
-- Metrics utilities and block-bootstrap confidence interval utility implemented.
-- Statistical utility tests pass locally.
-- Multiple-testing, data-snooping and backtest-overfitting controls explicitly specified.
-- Manual GitHub Actions workflow added.
+## Phase 5 outputs
+- Robustness matrix specified.
+- Cost/slippage, liquidity, delay, partial-fill, regime and parameter-stability stress tests specified.
+- Replication and fragility criteria documented.
+- Manual workflow added.
 
-## Empirical limitation
-No licensed/validated market dataset covering the required scalping/intraday/BTST/swing horizons is currently present in the repository. Therefore no empirical return, Sharpe, p-value, confidence interval, or profitability classification is reported.
+## Stop-condition status
+Because Phase 4 has no validated market data, Phase 5 empirical execution is not performed. Synthetic or undocumented data are not substituted for stock evidence.
