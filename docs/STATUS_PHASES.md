@@ -17,7 +17,7 @@ Updated: 2026-09-20
 - Manual Phase 1 workflow.
 
 ## Phase 2 entry conditions
-- Verify current Paytm Money cash-equity brokerage and all applicable charges from primary sources.
+- Verify current Paytm Money cash-equity brokerage and applicable charges from primary sources.
 - Freeze the versioned cost configuration.
 - Define the point-in-time stock universe and historical symbol/corporate-action policy.
 - Acquire or validate datasets for each horizon.
