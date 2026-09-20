@@ -3,7 +3,7 @@
 Research project studying whether Monte Carlo methods can improve the statistical validation and/or decision support of stock-trading systems across scalping, intraday, BTST and swing horizons.
 
 ## Current status
-**Phase 8 public-data expansion in progress — no universally robust strategy has been established.**
+**Phase 8 cross-market replication active — no universally robust strategy has been established.**
 
 Phase 8 broadens the data audit to Kaggle, Hugging Face, TejHQ and a 214-symbol NSE F&O 1-minute release. A corrected 8-symbol interim replication is already negative for the frozen EMA framework at 5 bps/leg; the independent 214-symbol/TejHQ run is configured for cached GitHub Actions execution.
 
@@ -43,3 +43,10 @@ No single consistent, cost-aware and out-of-sample-robust strategy has been esta
 - `docs/ERROR_LOG_PHASE8.md`
 - `scripts/phase8_public_data_screen.py`
 - `.github/workflows/phase-8-public-data-expansion.yml`
+
+
+## Phase 8 cross-market replication
+
+A corrected independent historical-NSE panel and a 19-symbol BSE cross-market panel were added without changing the frozen EMA20/21 + Monte-Carlo gate. The accessible BSE 2025 test was negative at 5 bps/leg for both BTST (median -2.94%, 4/19 positive, median PF 0.13) and swing (median -3.28%, 6/19 positive, median PF 0.45). The corrected GitHub Actions rerun is the authoritative aggregate and is preserved as an artifact rather than treating ad-hoc calculations as final.
+
+Files: [cross-market plan](docs/PHASE8_CROSSMARKET_REPLICATION.md), [script](scripts/phase8_crossmarket_replication.py), [workflow](.github/workflows/phase-8-crossmarket-replication.yml), [cross-market error log](docs/ERROR_LOG_PHASE8_CROSSMARKET.md).
