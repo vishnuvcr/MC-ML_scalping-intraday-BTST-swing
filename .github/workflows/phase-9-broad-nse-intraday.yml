@@ -1,0 +1,33 @@
+name: Phase 9 Broad NSE 1-Minute Intraday
+
+concurrency:
+  group: phase9-broad-minute-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  push:
+    branches: [phase-9-universe-selection-regime]
+  workflow_dispatch:
+
+jobs:
+  broad_minute:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/cache@v4
+        with:
+          path: .cache/phase9_fullminute
+          key: phase9-broad-minute-cache-v1
+      - name: Install dependencies
+        run: pip install -U numpy pandas pyarrow statsmodels scipy huggingface_hub
+      - name: Run broad 1-minute to 15-minute analysis
+        run: python scripts/phase9_full_nse_intraday.py --out research_results/phase9_full_nse_intraday
+      - name: Upload derived results only
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase9-broad-nse-intraday
+          path: research_results/phase9_full_nse_intraday
