@@ -56,3 +56,8 @@ Statistics: paired baseline-vs-MC comparison, factor quintiles, cluster-aware bo
 ### Acceptance rule
 
 A factor or stock-selection condition is not promoted because it has a high return in one subgroup. It must improve the matched baseline, remain positive out of sample, survive at least 5 bps/leg, avoid concentration in a few symbols, and use only information available before the trade.
+
+
+## 2026-only Nifty500 forward path
+
+The 2026 repository contains 535 Parquet files and is being used as an independent forward-testing source. The analysis includes 2026 test performance, liquidity/volatility/trend/regime factor tables, MC-vs-baseline uplift, and lagged NSE-BSE basis where synchronized TejHQ observations exist. Results remain pending until the corrected workflow artifact is available.
