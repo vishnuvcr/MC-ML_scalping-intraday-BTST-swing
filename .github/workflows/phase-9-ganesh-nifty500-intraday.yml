@@ -48,6 +48,11 @@ jobs:
           fetch-depth: 1
       - name: Install dependencies
         run: pip install -U numpy pandas pyarrow statsmodels scipy huggingface_hub
+      - name: Cache TejHQ daily files
+        uses: actions/cache@v4
+        with:
+          path: .cache/phase9_tejhq
+          key: phase9-tejhq-2024-2026-v1
       - name: Download synchronized TejHQ NSE/BSE daily files
         run: |
           python - <<'PY'
