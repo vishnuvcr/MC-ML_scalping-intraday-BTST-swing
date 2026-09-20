@@ -4,15 +4,19 @@
 
 **Date:** 20 September 2026
 **Market context:** Indian equities; NSE/BSE; Paytm Money execution-cost context
-**Study status:** Methodology and software validation complete; stock-level empirical profitability estimation blocked by validated market-data access.
+**Study status:** Phase 8 empirical screening and cross-source replication completed under the finite public-data protocol; no universal cost-aware, out-of-sample-robust strategy established.
 
 ## Abstract
 
-This study was designed to determine whether Monte Carlo methods can be used in a statistically defensible and economically meaningful way for stock trading across scalping, intraday, BTST and swing horizons. The research treats Monte Carlo as a family of resampling and simulation methods rather than as a standalone trading strategy. The protocol pre-specifies matched non-Monte-Carlo baselines, realistic brokerage/statutory charges, spread and slippage, point-in-time data handling, out-of-sample evaluation, dependence-aware bootstrap methods, null/placebo tests and data-snooping controls including White Reality Check, Hansen SPA, Deflated Sharpe Ratio and Probability of Backtest Overfitting where appropriate.
+This study evaluated whether Monte Carlo methods can add statistically credible and economically meaningful value to trading-system research across scalping, intraday, BTST and swing horizons. Monte Carlo was treated as a validation, uncertainty and risk layer rather than as a standalone alpha model. The protocol specified matched non-Monte-Carlo baselines, realistic transaction costs and slippage, strict information timing, out-of-sample testing, data-snooping controls, error logging and a finite stop rule.
 
-The literature review supports Monte Carlo most strongly as a validation, uncertainty-quantification and risk-analysis framework. It does not establish that Monte Carlo alone creates predictive alpha. Current Indian cash-equity costs are material. Under the study's provisional cost configuration, a ₹100,000 buy and ₹100,000 sell round trip is approximately ₹82.68 of intraday cost before spread/slippage and approximately ₹182.68 with 2 basis points of spread plus 3 basis points of slippage per leg. A comparable delivery round trip is approximately ₹269.68 before spread/slippage. These are arithmetic illustrations, not trading results or brokerage quotes.
+Because exchange-grade tick/bid/ask data were not accessible in the research runtime under acceptable source constraints, public NSE/BSE OHLCV sources were used for empirical replication. Fifteen-minute data were treated only as a scalping proxy. The main short-horizon framework used EMA(20/26), ATR(14) risk control and fixed holding periods; daily BTST/swing used EMA(20/21), with BTST defined as exactly one overnight hold and swing limited to eight sessions. The Monte Carlo gate used 250 bootstrap paths of the last 30 completed net trade returns after a 20-trade warm-up, requiring at least 125 positive terminal paths for participation.
 
-The empirical stock-level question remains unresolved because the repository does not currently contain licensed/validated datasets sufficient for the required scalping and intraday horizons, and public EOD substitutes may introduce survivorship, corporate-action or licensing problems. The research therefore stops at the pre-defined empirical gate. The defensible conclusion is that Monte Carlo is scientifically appropriate as a validation and risk layer, but no claim of profitable stock trading can be made from this study until the required point-in-time market data are supplied and the full out-of-sample analysis is executed.
+The strongest prior single-symbol result was a TCS 15-minute EMA20/26 intraday system: +14.33% out-of-sample, PF 2.87, Sharpe 2.10 and maximum drawdown -1.92% in the finite Phase 7 screen. This remained an exploratory candidate rather than a live-validated strategy because the result was concentrated in one symbol, used 15-minute rather than true 1-minute/tick data, and lacked bid/ask execution evidence.
+
+Phase 8 broadened the daily evidence. In a corrected historical NSE panel, the 5-bps-per-leg test median was -4.61% for BTST and -7.51% for swing. In an independent BSE panel, the corresponding medians were -2.94% and -3.28%. Median profit factors were below one across these daily replications. Monte Carlo generally reduced participation rather than creating a repeatable return advantage; the BSE panel often did not reach the 20-trade warm-up, so equality with baseline there is not interpreted as proof that MC has no effect.
+
+The final conclusion is bounded: **Monte Carlo is useful as a statistical/risk layer, but the present evidence does not establish a universal profitable strategy across scalping, intraday, BTST and swing.** The strongest candidate is a TCS-specific 15-minute intraday research system, not a live-validated or stock-agnostic strategy. Stronger claims require new data—especially 1-minute/tick/bid-ask history and a broader point-in-time universe—rather than more indicator mining on the same samples.
 
 ## 1. Introduction
 
@@ -117,58 +121,140 @@ These are software verification results, not market-performance results.
 The delivery case is strongly affected by the current 0.10% STT on both delivery purchase and sale. The intraday case has 0.025% STT on the non-delivery equity sale side. Current NSE levy information also lists 0.015% delivery stamp duty and 0.003% non-delivery stamp duty on the buyer, 0.0001% SEBI turnover fee and 18% GST on stock-broker services.[2]
 
 ### 7.3 Empirical profitability results
-**Not estimable in this run.** No stock-level CAGR, Sharpe, p-value, confidence interval, win rate, drawdown or profitability classification is reported because the required validated market datasets are not present.
+
+The empirical gate was reopened in Phase 7 and expanded in Phase 8. The principal results are summarized below.
+
+| Horizon | Key test evidence | Status |
+|---|---|---|
+| Scalping proxy | TCS 15m EMA20/26 candidate +5.59%, PF 1.71, Sharpe 1.17, DD -2.94%, 40 trades; corrected 8-symbol 5-bps replication mean -7.65%, median -7.68%, 0/8 positive | Exploratory only |
+| Intraday | TCS 15m EMA20/26 candidate +14.33%, PF 2.87, Sharpe 2.10, DD -1.92%, 40 trades; broader 8-symbol replication mean -5.70%, median -6.68%, 1/8 positive at 5 bps | Strongest single-symbol candidate; not universal |
+| BTST | Corrected HDFCBANK candidate failed validation-to-test; historical NSE 5-bps median -4.61%; BSE 5-bps median -2.94% | No validated strategy |
+| Swing | HDFCBANK test +0.94%, PF 1.08; historical NSE 5-bps median -7.51%; BSE 5-bps median -3.28% | No robust strategy |
+
+### 7.4 Phase 8 cost and cross-source replication
+
+At 5 bps per execution leg, the corrected historical NSE panel gave:
+
+| Horizon | Mean return | Median return | Positive symbols | Median PF | Median trade Sharpe |
+|---|---:|---:|---:|---:|---:|
+| BTST | -4.97% | -4.61% | 4/19 | 0.50 | -0.28 |
+| Swing | -3.69% | -7.51% | 7/19 | 0.62 | -0.20 |
+
+The independent BSE panel gave:
+
+| Horizon | Mean return | Median return | Positive symbols | Median PF | Median trade Sharpe |
+|---|---:|---:|---:|---:|---:|
+| BTST | -2.55% | -2.94% | 4/19 | 0.13 | -0.69 |
+| Swing | -3.36% | -3.28% | 6/19 | 0.45 | -0.24 |
+
+Increasing friction from 0 to 5 to 10 bps per leg worsened the net result in the daily replications. This directional sensitivity is consistent with the project's cost model.
+
+### 7.5 Monte Carlo contribution
+
+Monte Carlo primarily acted as a participation/risk filter. It reduced trade counts once sufficient history existed and sometimes reduced drawdown, but the study did not observe a consistent cross-source increase in raw return.
+
+The BSE panel is also a warning against overinterpreting MC comparisons: many symbols did not reach the 20-trade warm-up, so the gate was often inactive.
+
+### 7.6 Graphical summary
+
+```mermaid
+xychart-beta
+    title "Mean test return at 5 bps per execution leg"
+    x-axis ["NSE BTST","NSE Swing","BSE BTST","BSE Swing"]
+    y-axis "Return (%)" -8 --> 1
+    bar [-4.97,-3.69,-2.55,-3.36]
+```
+
+```mermaid
+xychart-beta
+    title "Median symbol test return at 5 bps per execution leg"
+    x-axis ["NSE BTST","NSE Swing","BSE BTST","BSE Swing"]
+    y-axis "Median return (%)" -9 --> 0
+    bar [-4.61,-7.51,-2.94,-3.28]
+```
 
 ## 8. Inferences
 
-1. Monte Carlo is methodologically useful even when it does not improve prediction: it can quantify drawdown, trade-sequence uncertainty and the stability of conclusions.
-2. A Monte Carlo overlay can become another source of overfitting if the simulation design, block length or parameter choices are tuned against the same backtest.
-3. Short-horizon profitability is highly sensitive to execution assumptions. The cost illustration shows that a strategy producing only a few basis points of gross edge per round trip could be economically fragile.
-4. Delivery/BTST/swing strategies face a different cost structure from intraday/scalping, so a single Monte Carlo configuration should not be assumed to transfer across horizons.
-5. There is currently insufficient evidence to say that Monte Carlo itself generates profitable stock-trading alpha.
+1. Monte Carlo is useful for uncertainty, trade-order sensitivity and participation control even when it does not create alpha.
+2. The daily EMA20/21 framework failed the study's robustness gate across independent public panels after realistic friction.
+3. A single-symbol positive result cannot establish a stock-agnostic strategy when the broader symbol panel is negative.
+4. A 15-minute positive TCS result cannot be promoted to genuine scalping evidence without finer-resolution execution data.
+5. The evidence is more consistent with Monte Carlo being a validation/risk layer than a direct source of predictive alpha.
 
 ## 9. Discussion
 
-The central finding is methodological: **Monte Carlo should be evaluated as a conditional research component, not as the trading thesis itself.** The key scientific comparison is baseline versus matched Monte Carlo treatment under identical information sets and execution assumptions.
+### Scalping
 
-For scalping and intraday, the primary challenge is not merely statistical significance but microstructure realism. If bid/ask, delay, partial fills and market impact are not measured, a backtest may overstate economic performance. For BTST and swing, daily data can support a meaningful empirical study, but point-in-time universes and corporate actions remain essential.
+A genuine scalping conclusion cannot be made from the available data. The 15-minute proxy was negative in the corrected multi-stock replication, while the strongest earlier TCS result was positive. This disagreement is exactly why the TCS observation remains exploratory. True scalping evaluation requires 1-minute/tick data plus spread, latency and fill modelling.
 
-The most defensible future experiment is therefore a four-horizon, multi-stock, walk-forward study in which the same baseline signal is evaluated with and without Monte Carlo risk/selection layers. The empirical question should be framed as an incremental-value test rather than a search for a universally profitable Monte Carlo strategy.
+### Intraday
+
+The TCS 15-minute EMA20/26 candidate is the strongest empirical observation from the finite study. It remains concentrated in one stock and one public data source, so it is best regarded as a paper-trading research candidate rather than a live-validated system.
+
+### BTST
+
+The corrected one-overnight definition removed a serious earlier ambiguity. The HDFCBANK validation result did not persist into its test period, and both the historical NSE and BSE daily panels were negative at 5 bps/leg. No BTST deployment candidate survives the robustness gate.
+
+### Swing
+
+The HDFCBANK candidate was only weakly positive out of sample, while the cross-source panels were negative on median return and profit factor. The daily swing evidence therefore does not support a robust strategy from the frozen EMA/MC family.
+
+### Why the study stops here
+
+Continuing to add indicators or tune parameters on the same public samples would convert the pre-specified research plan into uncontrolled data mining. The next scientifically meaningful step is new information: licensed point-in-time data, richer execution data and an independent future holdout.
 
 ## 10. Strengths
 
-- Pre-specified finite research plan.
-- Explicit separation of Monte Carlo from the trading signal.
-- Dependence-aware resampling included from the start.
-- Realistic cost/slippage model with versioned inputs.
-- Multiple-testing and backtest-overfitting controls pre-specified.
-- Dedicated Git branches and manual workflows for phases.
-- Tests and reproducibility logs kept in the repository.
-- No fabricated empirical results when required data were unavailable.
+- Finite, pre-specified research plan with explicit stop conditions.
+- Explicit separation of signal logic and Monte Carlo gating.
+- Corrected BTST holding-period definition and equity-capped capital accounting.
+- Transaction costs and slippage sensitivity incorporated before interpretation.
+- Cross-source daily replication rather than reliance on one public dataset.
+- Reproducible scripts, workflows, provenance and error logs.
+- Negative results are retained rather than discarded.
 
 ## 11. Limitations
 
-- No validated high-frequency stock dataset was available in the repository during this study run.
-- The Paytm Money public calculator is not a complete all-in cost quote; account-specific and additional charges must be verified before final backtesting.[1]
-- The cost illustration uses a provisional ₹20/order brokerage input and is not a personalized brokerage quote.
-- Without out-of-sample market data, no statement about actual profitability, effect size or statistical significance can be made.
-- Some advanced inference methods require careful implementation once the size of the strategy family and data structure are known.
+- Fifteen-minute data are a scalping proxy, not tick/1-minute microstructure evidence.
+- Public datasets can contain survivorship, corporate-action and symbol-history limitations.
+- Bid/ask, queue position, latency, partial fills and market impact were not directly observed.
+- The large 214-symbol 1-minute and TejHQ workflows were implemented, but their runner artifacts are not observable from the available interface; they are not counted as executed evidence.
+- The BSE replication panel contained 19 available project symbols.
+- The MC gate can be inactive when fewer than 20 historical trades exist.
+- The public-data screen did not execute the full White Reality Check/SPA/PBO stack over every experiment; those methods remain in the formal protocol rather than being retroactively claimed as completed.
+- Paytm Money account-specific/platform/depository costs should be re-verified before any future paper/live execution study.
 
 ## 12. Conclusion
 
-The evidence supports a **qualified yes** to Monte Carlo's usefulness in stock-trading research, but **not a conclusion that Monte Carlo itself is a profitable trading strategy**. Monte Carlo is well suited to estimating uncertainty, drawdown, null distributions and robustness, while profitability must come from an underlying trading signal that survives out-of-sample testing and realistic execution costs.
+### Primary conclusion
 
-For the specific question of whether Monte Carlo can be significantly used to trade stocks profitably across scalping, intraday, BTST and swing, the present study reaches a **data-gated conclusion**: the method is scientifically appropriate for the planned evaluation, but stock-level profitability remains unestablished until licensed/validated market data are supplied and the empirical phases are run.
+**No universally consistent, cost-aware, out-of-sample-robust strategy was established across scalping, intraday, BTST and swing.**
+
+### Monte Carlo conclusion
+
+Monte Carlo is supported as a **validation, participation and risk-control layer**, not as a stand-alone source of trading alpha in this study.
+
+### Horizon-specific status
+
+| Horizon | Status |
+|---|---|
+| Scalping | No validated strategy; 15m evidence is only a proxy |
+| Intraday | TCS 15m candidate for paper research only |
+| BTST | No validated strategy |
+| Swing | No robust strategy |
+
+A "no validated strategy" outcome is a usable scientific result because it prevents deployment of a system whose apparent edge fails cost and cross-source tests.
 
 ## 13. Future research
 
-1. Obtain licensed NSE/BSE historical data for tick/sub-minute/intraday and daily horizons with explicit redistribution/usage rights.
-2. Freeze a point-in-time multi-stock universe and corporate-action history.
-3. Run the pre-registered four-horizon matched baseline-vs-Monte-Carlo experiment.
-4. Apply White Reality Check/SPA, DSR and PBO where applicable.
-5. Repeat across volatility, liquidity and market regimes.
-6. Add measured bid/ask and partial-fill execution simulation for scalping.
-7. Validate the entire process on an independent future holdout before any live deployment consideration.
+1. Obtain licensed 1-minute/tick/bid-ask NSE data with point-in-time corporate-action and symbol history.
+2. Re-run the exact TCS intraday specification on an independent multi-stock future holdout.
+3. Measure realized spread, latency and partial fills rather than relying only on bps proxies.
+4. Apply dependence-aware bootstrap and formal selection-aware inference after the strategy family is frozen.
+5. Use a broad point-in-time universe for BTST/swing with explicit survivorship controls.
+6. Only after an independent positive holdout should paper deployment be expanded.
+
+No additional indicator family is added to the current protocol.
 
 ## 14. Reproducibility appendix
 
@@ -212,50 +298,11 @@ For the specific question of whether Monte Carlo can be significantly used to tr
 [10] Park, C.-H., & Irwin, S. H. (2010). A Reality Check on Technical Trading Rule Profits in the U.S. Futures Markets. Journal of Futures Markets, 30(7), 633–659. https://doi.org/10.1002/fut.20435
 
 ## Final research status
-**Stopped at the pre-defined empirical gate on 20 September 2026.** The next research step is data acquisition/validation, not strategy invention or parameter optimization.
 
+**Complete under the finite public-data protocol on 20 September 2026.** The large 1-minute/F&O and TejHQ workflows remain configured reproducibility artifacts but are not counted as executed empirical evidence because the available interface cannot expose a runner artifact.
 
-## 15. Phase 7 empirical continuation requested by the user
+The strongest remaining candidate is the TCS 15-minute EMA20/26 intraday system with the Monte Carlo participation gate. It is a research candidate, not a live-validated universal strategy.
 
-The empirical gate was reopened using a secondary public OHLCV dataset from the MIT-licensed `scriptkidakash81/stocks-data` research pipeline, which documents Yahoo Finance as its market-data source. Because the available 1-minute files were too large for the repository-fetch interface, 15-minute bars were used as a scalping proxy. This means the short-horizon results are not equivalent to tick/1-minute microstructure evidence.
+### Phase 8 final evidence statement
 
-### 15.1 Final common candidate framework
-The primary candidate used:
-- EMA(20/26) crossover for short horizons;
-- EMA(20/21) crossover for daily horizons;
-- ATR(14) stop;
-- next-bar/day-open entry;
-- fixed maximum holding period;
-- Monte Carlo gate based on the last 30 net trades, 250 bootstrap resamples, and a 50% positive-path threshold once at least 20 prior trades exist;
-- full transaction-cost treatment from the study cost engine.
-
-### 15.2 Scalping proxy
-For TCS, the 15-minute version with a 4-bar maximum hold and 1.5 ATR stop produced validation return of +0.74% (PF 1.14, 32 trades) and subsequent out-of-sample return of +5.59% (PF 1.71, Sharpe 1.17, maximum drawdown -2.94%, 40 trades).
-
-This is the strongest short-horizon candidate from the screen, but it is not a validated true scalping strategy because bid/ask, latency, partial fills and 1-minute/tick data were not available.
-
-### 15.3 Intraday
-For TCS, the same EMA framework with a 20-bar maximum hold produced validation return of +3.00% (PF 1.49, 33 trades) and subsequent out-of-sample return of +14.33% (PF 2.87, Sharpe 2.10, maximum drawdown -1.92%, 40 trades).
-
-This result is promising within the tested sample but is concentrated in one stock and one 15-minute dataset window. It therefore remains a research candidate rather than a live-validated system.
-
-### 15.4 BTST correction and result
-A previous daily experiment incorrectly reused an 8-session holding period for both BTST and swing. The BTST analysis was re-run correctly as exactly one overnight holding period: enter at the next session open after the signal and exit at that next session close.
-
-The corrected results did not persist out of sample. For example, HDFCBANK had +7.54% validation return (PF 3.56) but -2.50% subsequent test return (PF 0.53). TCS had +0.39% validation and -9.35% test. No BTST strategy is therefore classified as usable.
-
-### 15.5 Swing
-The daily EMA(20/21), 8-session maximum-hold candidate produced HDFCBANK validation return of +6.75% (PF 1.38) and subsequent test return of +0.94% (PF 1.08, Sharpe 0.15). This is a weak positive observation, not robust evidence of deployable profitability.
-
-Other stocks were heterogeneous, and SBIN's strong validation result did not persist into the test period. This prevents a universal swing-strategy claim.
-
-### 15.6 Monte Carlo contribution
-Across the tested families, the Monte Carlo gate usually reduced the number of trades and sometimes reduced drawdown. It did not consistently improve raw return. In the TCS intraday candidate, the MC component should therefore be interpreted mainly as a participation/risk filter rather than as the source of alpha.
-
-### 15.7 Rejected 52-week-high experiment
-A separate 52-week-high/momentum screen generated very large apparent returns on several symbols. It was rejected after identifying an invalid accounting design: overlapping positions were treated as sequentially compounded fixed-notional trades. That can dramatically inflate reported capital growth. The entire result is excluded from the research conclusion.
-
-### 15.8 Final empirical conclusion
-The requested finite empirical extension is complete. **No single cost-aware, out-of-sample-robust strategy was established across scalping, intraday, BTST and swing.** The strongest remaining research candidate is the TCS 15-minute EMA20/26 intraday system with the Monte Carlo gate. It is not sufficient to establish a general stock-trading strategy because of the single-symbol concentration, limited 15-minute history, lack of bid/ask/tick execution data and absence of a broad independent holdout.
-
-The research therefore stops here rather than continue searching indicators on the same sample. That stop preserves the statistical validity of the project. A genuinely stronger next step would require new data—1-minute/tick/bid-ask history and a broader point-in-time stock universe—rather than additional parameter mining.
+The cross-source daily evidence failed the robustness gate at 5 bps per leg on both independent panels. The project therefore stops strategy search rather than perform post-hoc indicator mining. Stronger evidence requires new data and an independent holdout, not more tuning on the same sample.
