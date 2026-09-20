@@ -1,11 +1,11 @@
 # MC / ML for Scalping, Intraday, BTST & Swing
 
-Research project studying whether Monte Carlo methods can improve the statistical validation and/or decision support of profitable stock-trading systems across four horizons: scalping, intraday, BTST and swing trading.
+Research project studying whether Monte Carlo methods can improve the statistical validation and/or decision support of stock-trading systems across scalping, intraday, BTST and swing horizons.
 
 ## Current status
 **Phase 0 — Governance and protocol:** In progress (2026-09-20, Asia/Kolkata).
 
-See Research Protocol, Research Plan, Research Status, and Error Log in docs/.
+Key project files: RESEARCH_PROTOCOL.md, docs/RESEARCH_PLAN.md, docs/RESEARCH_QUESTIONS.md, docs/STATUS_PHASES.md, docs/ERROR_LOG.md and docs/CHAT_LOG.md.
 
 ## Research question
 Can Monte Carlo methods be used as a statistically defensible component of trading systems for Indian equities across scalping, intraday, BTST and swing horizons, while remaining economically profitable after realistic brokerage, statutory charges, spread, slippage and execution frictions?
@@ -28,9 +28,8 @@ Monte Carlo is not assumed to be a profitable strategy by itself. The study will
 - RESEARCH_PROTOCOL.md
 - docs/RESEARCH_PLAN.md
 - docs/RESEARCH_QUESTIONS.md
-- docs/RESEARCH_STATUS.md
-- docs/LITERATURE_REVIEW.md (planned in Phase 1)
-- docs/COST_MODEL.md (planned in Phase 2)
+- docs/STATUS_PHASES.md
 - docs/ERROR_LOG.md
 - docs/CHAT_LOG.md
+- PROJECT_WORKING_RULES.md
 - .github/workflows/phase-0-governance.yml
