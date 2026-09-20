@@ -103,7 +103,14 @@ def adjust_corporate_action_scales(df):
     daily = x.groupby(day).agg(open=("open","first"), close=("close","last"))
     daily["prev_close"] = daily["close"].shift(1)
     daily["ratio"] = daily["open"] / daily["prev_close"]
-    factors = np.array([0.1, 0.2, 0.25, 1/3, 0.5, 2.0, 3.0, 4.0, 5.0, 10.0])
+    # Include common splits/bonus-equivalent scale changes up to 20:1 and their reciprocals.
+    # The source has no corporate-action field, so only large jumps close to an exact
+    # integer ratio are normalized. These are data-quality corrections, not signals.
+    factors = np.array(sorted(set(
+        [0.05, 0.1, 0.125, 0.2, 0.25, 1/3, 0.5] +
+        [1.0 / k for k in range(2, 21)] +
+        [float(k) for k in range(2, 21)]
+    )))
     events = []
     adj = 1.0
     day_adj = {}
@@ -113,14 +120,12 @@ def adjust_corporate_action_scales(df):
         if np.isfinite(r) and r > 0 and abs(np.log(r)) > np.log(1.2):
             j = int(np.argmin(np.abs(np.log(r / factors))))
             cand = float(factors[j])
-            if abs(np.log(r / cand)) <= np.log(1.02):
+            if abs(np.log(r / cand)) <= np.log(1.03):
                 f = cand
         if f is not None:
             adj *= 1.0 / f
-            events.append({"date": str(pd.Timestamp(d).date()), "raw_open_prev_close_ratio": float(r), "scale_factor": f, "cumulative_price_multiplier": adj})
+            events.append({"date": str(pd.Timestamp(d).date()), "raw_open_prev_close_ratio": float(r), "scale_factor": f, "cumulative_price_multiplier": adj, "level": "daily"})
         day_adj[d] = adj
-    if not events:
-        return x, events
     mult = pd.Series([day_adj[d] for d in day], index=x.index, dtype=float)
     x["open"] *= mult
     x["high"] *= mult
@@ -128,7 +133,33 @@ def adjust_corporate_action_scales(df):
     x["close"] *= mult
     if "volume" in x.columns:
         x["volume"] = x["volume"] / mult
-    return x, events
+
+    # Second pass: some Ganesh files mix adjusted/unadjusted intraday blocks inside
+    # the same session. Detect the same large exact-ratio scale breaks at bar level.
+    # A genuine 1-minute/15-minute NSE price move of 2x, 3x, ... is treated as a
+    # data-quality event and normalized; ordinary large moves are left untouched.
+    y = x.sort_index()
+    prev_close = y["close"].shift(1)
+    ratio = y["open"] / prev_close
+    intraday_mult = 1.0
+    bar_mult = []
+    for ts, rv in ratio.items():
+        f = None
+        if np.isfinite(rv) and rv > 0 and abs(np.log(rv)) > np.log(1.2):
+            j = int(np.argmin(np.abs(np.log(rv / factors))))
+            cand = float(factors[j])
+            if abs(np.log(rv / cand)) <= np.log(1.03):
+                f = cand
+        if f is not None:
+            intraday_mult *= 1.0 / f
+            events.append({"date": str(pd.Timestamp(ts).date()), "timestamp": str(ts), "raw_open_prev_close_ratio": float(rv), "scale_factor": f, "cumulative_price_multiplier": intraday_mult, "level": "intraday"})
+        bar_mult.append(intraday_mult)
+    bm = pd.Series(bar_mult, index=y.index, dtype=float)
+    for col in ("open", "high", "low", "close"):
+        y[col] *= bm
+    if "volume" in y.columns:
+        y["volume"] = y["volume"] / bm
+    return y, events
 
 def resample_15m(raw):
     agg = {
