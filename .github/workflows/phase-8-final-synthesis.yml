@@ -1,0 +1,35 @@
+name: Phase 8 Final Synthesis Validation
+
+on:
+  push:
+    branches: [phase-8-final-synthesis]
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Compile research scripts
+        run: |
+          python -m py_compile scripts/phase8_public_data_screen.py
+          python -m py_compile scripts/phase8_crossmarket_replication.py
+      - name: Check manuscript and evidence gate
+        run: |
+          test -s manuscript/FINAL_RESEARCH_REPORT.md
+          test -s docs/FINAL_EVIDENCE_GATE_PHASE8.md
+          grep -q "No universally consistent" manuscript/FINAL_RESEARCH_REPORT.md
+          grep -q "BTST" docs/FINAL_EVIDENCE_GATE_PHASE8.md
+          grep -q "Swing" docs/FINAL_EVIDENCE_GATE_PHASE8.md
+      - name: Upload final manuscript
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase8-final-manuscript
+          path: |
+            manuscript/FINAL_RESEARCH_REPORT.md
+            docs/FINAL_EVIDENCE_GATE_PHASE8.md
+            docs/PHASE8_RESULTS.md
