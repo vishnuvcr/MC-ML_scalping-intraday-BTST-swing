@@ -71,14 +71,14 @@ def regress(panel):
     except Exception as exc:
         return {"error": repr(exc), "n": len(z)}
 
-    accepted_rows = z[z["mc_return"].notna()].copy()
+    accepted_rows = z[z["mc_ret"].notna()].copy()
     if len(accepted_rows) >= 50:
         Xa = accepted_rows[factors].copy()
         for c in factors:
             s = Xa[c].std()
             Xa[c] = (Xa[c] - Xa[c].mean()) / (s if np.isfinite(s) and s else 1.0)
         Xa = sm.add_constant(Xa, has_constant="add")
-        model = sm.OLS(accepted_rows["mc_return"], Xa).fit(cov_type="HC3")
+        model = sm.OLS(accepted_rows["mc_ret"], Xa).fit(cov_type="HC3")
         for c in factors:
             out.append({
                 "model": "MC_trade_return",
