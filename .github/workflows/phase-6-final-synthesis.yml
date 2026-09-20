@@ -1,0 +1,17 @@
+name: Phase 6 - Final Synthesis
+
+on:
+  workflow_dispatch:
+
+jobs:
+  final-report:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Check final manuscript
+        run: |
+          test -f manuscript/FINAL_RESEARCH_REPORT.md
+          test -f manuscript/figures/cost_sensitivity.svg
+          test -f docs/PHASE5_ROBUSTNESS_PLAN.md
+          echo "Final research report artifacts present."
