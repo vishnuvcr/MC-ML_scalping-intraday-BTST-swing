@@ -86,6 +86,12 @@ def features(df):
     mv=z.groupby("symbol").volume.transform(lambda s:s.rolling(20,min_periods=20).mean())
     sv=z.groupby("symbol").volume.transform(lambda s:s.rolling(20,min_periods=20).std())
     z["vol_z"]=(z.volume-mv)/sv
+    cs=z.groupby("date").agg(breadth=("ret1",lambda s:float((s>0).mean())),median_ret=("ret1","median"),dispersion=("ret1","std")).sort_index()
+    cs["market_vol20"]=cs["median_ret"].rolling(20,min_periods=20).std().shift(1)
+    cs["market_trend20"]=cs["median_ret"].rolling(20,min_periods=20).sum().shift(1)
+    cs["breadth"]=cs["breadth"].shift(1)
+    cs["dispersion"]=cs["dispersion"].shift(1)
+    z=z.merge(cs[["breadth","dispersion","market_vol20","market_trend20"]],left_on="date",right_index=True,how="left")
     z["date_key"]=z.date.dt.strftime("%Y-%m-%d")
     return z
 
@@ -99,7 +105,21 @@ def main():
     nse=pd.concat(frames,ignore_index=True)
     nse["date"]=pd.to_datetime(nse["date"])
     nse=nse[nse["series"].isin(["EQ","BE","BZ"])].sort_values(["symbol","date"]).drop_duplicates(["symbol","date"],keep="last")
-    feat=features(nse).set_index(["symbol","date_key"],drop=False)
+    basis=pd.DataFrame()
+    if a.bse_root:
+        bfiles=list(Path(a.bse_root).glob("bse/year=*/bse_*.parquet"))
+        if bfiles:
+            bframes=[pd.read_parquet(p,columns=["date","symbol","close","series"]) for p in bfiles]
+            bse=pd.concat(bframes,ignore_index=True); bse["date"]=pd.to_datetime(bse["date"])
+            bse=bse[bse["series"].isin(["A","B","T"])][["date","symbol","close"]].drop_duplicates(["symbol","date"],keep="last")
+            nx=nse[["date","symbol","close"]].rename(columns={"close":"nse_close"})
+            basis=nx.merge(bse.rename(columns={"close":"bse_close"}),on=["date","symbol"],how="inner").sort_values(["symbol","date"])
+            basis["basis"]=basis["bse_close"]/basis["nse_close"]-1
+            basis["basis_lag1"]=basis.groupby("symbol")["basis"].shift(1)
+            basis=basis[["date","symbol","basis_lag1"]]
+    feat=features(nse)
+    if not basis.empty: feat=feat.merge(basis,on=["date","symbol"],how="left")
+    feat=feat.set_index(["symbol","date_key"],drop=False)
     rows=[]; feature_rows=[]
     for symbol,g in nse.groupby("symbol",sort=True):
         if len(g)<80: continue
@@ -113,16 +133,16 @@ def main():
                     try: f=feat.loc[(symbol,t["signal_date"])]
                     except KeyError: continue
                     rec={**t,"symbol":symbol,"mc":tag}
-                    for k in ["adv20","adv60","vol20","atr_pct","trend","mom20","vol_z","gap"]:
+                    for k in ["adv20","adv60","vol20","atr_pct","trend","mom20","vol_z","gap","breadth","dispersion","market_vol20","market_trend20","basis_lag1"]:
                         rec[k]=f[k]
                     feature_rows.append(rec)
     pd.DataFrame(rows).to_json(out/"full_nse_daily_results.json",orient="records",indent=2)
     f=pd.DataFrame(feature_rows)
     if not f.empty:
-        p=f.groupby(["symbol","entry_date","mc"],as_index=False).ret.sum().pivot_table(index=["symbol","entry_date"],columns="mc",values="ret",aggfunc="sum").reset_index().rename(columns={0:"ret_base",1:"ret_mc"})
-        p=p.dropna(subset=["ret_base","ret_mc"])
-        fp=f.sort_values("entry_date").groupby(["symbol","entry_date"],as_index=False).first()
-        p=p.merge(fp.drop(columns=["ret","mc"],errors="ignore"),on=["symbol","entry_date"],how="left")
+        p=f.groupby(["symbol","signal_date","mc"],as_index=False).ret.sum().pivot_table(index=["symbol","signal_date"],columns="mc",values="ret",aggfunc="sum").reset_index().rename(columns={0:"ret_base",1:"ret_mc"})
+        fp=f.sort_values("signal_date").groupby(["symbol","signal_date"],as_index=False).first()
+        p=p.merge(fp.drop(columns=["ret","mc"],errors="ignore"),on=["symbol","signal_date"],how="left")
+        p["mc_accept"]=p["ret_mc"].notna().astype(int)
         factors=[]
         for col in ["adv20","adv60","vol20","atr_pct","trend","mom20","vol_z","gap"]:
             q=p[[col,"ret_base","ret_mc"]].dropna().copy()
@@ -140,5 +160,16 @@ def main():
                 s=Xs[col].std(); Xs[col]=(Xs[col]-Xs[col].mean())/(s if np.isfinite(s) and s else 1)
             mod=sm.OLS(common.delta,sm.add_constant(Xs,has_constant="add")).fit(cov_type="HC3")
             Path(out/"conditional_regression.json").write_text(json.dumps({"n":len(common),"r2":float(mod.rsquared),"params":{k:float(v) for k,v in mod.params.items()},"pvalues":{k:float(v) for k,v in mod.pvalues.items()}},indent=2))
+    if not f.empty:
+        acceptance=f.groupby("symbol")["mc"].mean().rename("mc_accept_rate").reset_index()
+        acceptance.to_csv(out/"symbol_mc_acceptance.csv",index=False)
+        common=p.dropna(subset=["ret_base","ret_mc"]).copy() if not p.empty else pd.DataFrame()
+        if len(common)>=20:
+            base_sym=common.groupby("symbol")["ret_base"].mean()
+            mc_sym=common.groupby("symbol")["ret_mc"].mean()
+            delta=mc_sym.sub(base_sym,fill_value=np.nan).dropna()
+            rng=np.random.default_rng(9022026); syms=delta.index.to_numpy(); vals=[]
+            for _ in range(2000): vals.append(float(delta.reindex(rng.choice(syms,size=len(syms),replace=True)).mean()))
+            Path(out/"paired_mc_delta_bootstrap.json").write_text(json.dumps({"symbol_n":int(len(delta)),"mean_delta":float(delta.mean()),"ci95_low":float(np.quantile(vals,0.025)),"ci95_high":float(np.quantile(vals,0.975))},indent=2))
     Path(out/"provenance.json").write_text(json.dumps({"nse_symbols":int(nse.symbol.nunique()),"nse_rows":int(len(nse)),"nse_start":str(nse.date.min().date()),"nse_end":str(nse.date.max().date()),"test_start":TEST_START,"test_end":TEST_END},indent=2))
 if __name__=="__main__": main()
