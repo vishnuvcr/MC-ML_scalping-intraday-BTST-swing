@@ -24,3 +24,10 @@ The project documents daily and hourly OHLCV across its NSE stock universe. The 
 ## Data licensing rule
 
 Raw third-party market data are not copied into the repository. Workflows may cache them on runners subject to source terms. Only derived aggregate research results, provenance, hashes and code are committed.
+
+
+## Tier A2 — broad NSE minute universe
+
+Source: https://huggingface.co/datasets/rahulkrraj/indian-stock-market-minute-data
+
+The dataset publishes ~720 million minute rows covering 2,500+ NSE stocks and indices, describes coverage as 99.4% of active/suspended NSE equities and provides 1-minute candles from 2022-01-03 through 2026-01-21. The minute files are eight large ~1.4–1.6 GB Parquet shards sorted by symbol then timestamp. License is MIT. Phase 9 will process one shard at a time to avoid repeatedly downloading/caching 10.5 GB of raw files and will retain only derived results in the repository. citeturn893748search0turn893748search1
