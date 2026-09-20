@@ -13,3 +13,7 @@ Material decisions:
 - Record errors and research status in repository files after substantive steps.
 
 Private chain-of-thought is not copied into project files. This log records requests, material decisions, evidence and outcomes in a reproducible decision-trace format.
+
+
+## 2026-09-20 — final synthesis
+The finite public-data protocol was closed. Phase 8 cross-source daily replication failed the robustness gate at 5 bps/leg. The final manuscript, evidence gate, cross-market script/workflow, final synthesis workflow and status artifacts were synchronized to main. No universal live-ready strategy was promoted.
