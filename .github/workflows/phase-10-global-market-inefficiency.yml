@@ -1,5 +1,9 @@
 name: Phase 10 Global Market Inefficiency
 
+concurrency:
+  group: phase10-global-market-inefficiency-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     branches: [phase-10-global-market-inefficiency]
