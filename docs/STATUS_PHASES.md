@@ -52,3 +52,13 @@ See [manuscript/FINAL_RESEARCH_REPORT.md](../manuscript/FINAL_RESEARCH_REPORT.md
 ## Phase 9.2 — 2026-only Nifty500 forward path
 
 **Status: ACTIVE.** Uses the 535-file 2026 Ganesh Nifty500 1-minute panel and the frozen EMA20/26 intraday system. It splits 2026 into an early calibration window, March-April primary conditional test, and May-onward holdout; lagged NSE-BSE basis from TejHQ is included as a pre-trade factor. No result is accepted until the workflow completes.
+
+## Phase 10 — Global-market information / cross-market inefficiency
+
+Status: ACTIVE. Global-market scope is explicit. The first candidate is a prior-session five-market sign-consensus >= +3 filter applied to the frozen Indian EMA20/26 intraday framework. Historical and independent-source pilots support the hypothesis, but the currently synchronized 2026 independent sample is small and does not support promotion.
+
+See [PHASE10_PLAN.md](PHASE10_PLAN.md), [PHASE10_RESULTS.md](PHASE10_RESULTS.md), and [phase-10-global-market-inefficiency.yml](../.github/workflows/phase-10-global-market-inefficiency.yml).
+
+## Phase 9 correction gate
+
+The initial Ganesh Nifty500 workflow is not accepted as final empirical evidence. Corporate-action scaling, MC-gate history and overlapping-position accounting were corrected; a fresh workflow artifact is required before Phase 9 can close.
