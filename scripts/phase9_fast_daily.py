@@ -105,6 +105,18 @@ def main():
     nse=pd.concat(frames,ignore_index=True)
     nse["date"]=pd.to_datetime(nse["date"])
     nse=nse[nse["series"].isin(["EQ","BE","BZ"])].sort_values(["symbol","date"]).drop_duplicates(["symbol","date"],keep="last")
+    bse_frames=[]
+    for p in Path(a.daily_root).glob("bse/year=*/bse_*.parquet"):
+        try:
+            bse_frames.append(pd.read_parquet(p,columns=["date","symbol","close"]))
+        except Exception:
+            pass
+    bse=pd.concat(bse_frames,ignore_index=True) if bse_frames else pd.DataFrame(columns=["date","symbol","close"])
+    if not bse.empty:
+        bse["date"]=pd.to_datetime(bse["date"])
+        bse=bse.sort_values(["symbol","date"]).drop_duplicates(["symbol","date"],keep="last")
+    else:
+        bse=pd.DataFrame(columns=["date","symbol","close"])
     basis=pd.DataFrame()
     if a.bse_root:
         bfiles=list(Path(a.bse_root).glob("bse/year=*/bse_*.parquet"))
@@ -135,6 +147,8 @@ def main():
                     rec={**t,"symbol":symbol,"mc":tag}
                     for k in ["adv20","adv60","vol20","atr_pct","trend","mom20","vol_z","gap","breadth","dispersion","market_vol20","market_trend20","basis_lag1"]:
                         rec[k]=f[k]
+                    for k in ["basis_lag1","breadth","dispersion"]:
+                        rec[k]=f.get(k,np.nan)
                     feature_rows.append(rec)
     pd.DataFrame(rows).to_json(out/"full_nse_daily_results.json",orient="records",indent=2)
     f=pd.DataFrame(feature_rows)
@@ -143,15 +157,29 @@ def main():
         fp=f.sort_values("signal_date").groupby(["symbol","signal_date"],as_index=False).first()
         p=p.merge(fp.drop(columns=["ret","mc"],errors="ignore"),on=["symbol","signal_date"],how="left")
         p["mc_accept"]=p["ret_mc"].notna().astype(int)
+        # Point-in-time stock-selection metrics.
+        panel["liq_rank"]=panel.groupby("signal_date")["adv20"].rank(method="first",ascending=False)
+        panel["liq_top500"]=(panel["liq_rank"]<=500).astype(int)
+        panel["liq_quintile"]=panel.groupby("signal_date")["adv20"].transform(lambda s:pd.qcut(s.rank(method="first"),5,labels=False,duplicates="drop")+1)
+        selection={}
+        for label,sub in {"all":panel,"top500":panel[panel.liq_top500==1]}.items():
+            selection[label]={
+                "signals":int(len(sub)),
+                "mc_accept_rate":float(sub.mc_accept.mean()) if len(sub) else None,
+                "baseline_mean_return_pct":float(sub.baseline_ret.mean()*100) if len(sub) else None,
+                "mc_mean_return_pct":float(sub.mc_ret.dropna().mean()*100) if sub.mc_ret.notna().any() else None,
+                "mc_win_rate":float((sub.mc_ret.dropna()>0).mean()) if sub.mc_ret.notna().any() else None
+            }
+        Path(out/"selection_experiment.json").write_text(json.dumps(selection,indent=2))
         factors=[]
-        for col in ["adv20","adv60","vol20","atr_pct","trend","mom20","vol_z","gap"]:
+        for col in ["adv20","adv60","vol20","atr_pct","trend","mom20","vol_z","gap","breadth","dispersion","basis_lag1"]:
             q=p[[col,"ret_base","ret_mc"]].dropna().copy()
             if q.empty: continue
             q["q"]=pd.qcut(q[col],5,labels=False,duplicates="drop")+1
             for k,gq in q.groupby("q"):
                 factors.append({"factor":col,"quintile":int(k),"n":len(gq),"mean_base":float(gq.ret_base.mean()),"mean_mc":float(gq.ret_mc.mean()),"mean_delta":float((gq.ret_mc-gq.ret_base).mean()),"mc_better_rate":float((gq.ret_mc>gq.ret_base).mean())})
         pd.DataFrame(factors).to_csv(out/"factor_quintiles.csv",index=False); p.to_csv(out/"trade_factor_panel.csv",index=False)
-        X=p[[c for c in ["adv20","vol20","atr_pct","trend","mom20","vol_z","gap"] if c in p]].replace([np.inf,-np.inf],np.nan)
+        X=p[[c for c in ["adv20","vol20","atr_pct","trend","mom20","vol_z","gap","breadth","dispersion","basis_lag1"] if c in p]].replace([np.inf,-np.inf],np.nan)
         m=p[["ret_base","ret_mc"]].dropna().copy(); m["delta"]=m.ret_mc-m.ret_base
         common=pd.concat([X,m],axis=1).dropna()
         if len(common)>=50:
