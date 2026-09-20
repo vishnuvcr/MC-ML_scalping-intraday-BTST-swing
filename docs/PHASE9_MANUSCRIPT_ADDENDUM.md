@@ -44,3 +44,8 @@ A conditional effect is not promoted to a trading rule merely because one subgro
 4. survive at least 5 bps/leg friction;
 5. avoid excessive symbol concentration;
 6. use only lagged information.
+
+
+## Time-split rule
+
+Conditional stock-selection/regime rules will use 2018-2023 as training, 2024 as validation and 2025-2026-04-08 as the final daily test. For minute data, the analogous split is 2022-2024 train, 2025 validation and 2026-01-01 through 2026-04-08 test. Test-period subgroup performance is not used to choose the subgroup rule.
