@@ -132,6 +132,7 @@ def market_daily(old,new):
     if not parts: return pd.DataFrame()
     x=pd.concat(parts).sort_index(); x=x[~x.index.duplicated(keep="last")]
     d=x.resample("1D").agg({"open":"first","high":"max","low":"min","close":"last","volume":"sum"}).dropna(subset=["close"])
+    if d.index.tz is not None: d.index=d.index.tz_localize(None)
     d["ret1"]=d.close.pct_change()
     d["trend"]=ema(d.close,20)/ema(d.close,50)-1
     d["vol20"]=d.ret1.rolling(20,min_periods=20).std()
@@ -139,7 +140,9 @@ def market_daily(old,new):
     return d
 
 def period(ts):
-    d=pd.Timestamp(ts).normalize()
+    d=pd.Timestamp(ts)
+    if d.tzinfo is not None: d=d.tz_localize(None)
+    d=d.normalize()
     if d<=TRAIN_END: return "train"
     if VAL_START<=d<=VAL_END: return "validation"
     if TEST1_START<=d<=TEST1_END: return "test_primary"
@@ -320,7 +323,9 @@ def main():
             panel=panel.drop(columns=['date','join_key','basis_key'],errors='ignore')
     if daily_parts:
         daily=pd.concat(daily_parts,ignore_index=True)
-        daily["date"]=pd.to_datetime(daily["date"]).dt.normalize()
+        daily["date"]=pd.to_datetime(daily["date"])
+        if getattr(daily["date"].dt,"tz",None) is not None: daily["date"]=daily["date"].dt.tz_localize(None)
+        daily["date"]=daily["date"].dt.normalize()
         cs=daily.groupby("date").agg(
             breadth=("ret1",lambda s:float((s>0).mean())),
             dispersion=("ret1","std")
