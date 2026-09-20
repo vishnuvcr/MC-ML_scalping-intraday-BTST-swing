@@ -2,20 +2,20 @@
 
 Updated: 2026-09-20
 
-- Phase 0 — Governance: COMPLETE (merged to main)
+- Phase 0 — Governance: COMPLETE
 - Phase 1 — Literature and data audit: COMPLETE
 - Phase 2 — Data and execution-cost engine: PARTIALLY COMPLETE
-- Phase 3 — Baselines and Monte Carlo methods: COMPLETE (methodology + software verification)
-- Phase 4 — Backtests and statistical inference: BLOCKED_PENDING_DATA
-- Phase 5 — Robustness and regime analysis: NOT STARTED
-- Phase 6 — Final synthesis and manuscript: NOT STARTED
+- Phase 3 — Baselines and Monte Carlo methods: COMPLETE
+- Phase 4 — Backtests and statistical inference: DESIGN COMPLETE / EMPIRICAL EXECUTION BLOCKED
+- Phase 5 — Robustness and regime analysis: NOT EXECUTED (data-gated)
+- Phase 6 — Final synthesis and manuscript: PENDING
 
-## Phase 3 outputs
-- Baseline signal families specified before optimization.
-- IID trade bootstrap, stationary bootstrap, permutation/null and drawdown simulation implemented.
-- Fixed seeds and reproducibility conventions implemented.
-- Local Monte Carlo software tests pass.
+## Phase 4 outputs
+- Statistical inference plan frozen.
+- Metrics utilities and block-bootstrap confidence interval utility implemented.
+- Statistical utility tests pass locally.
+- Multiple-testing, data-snooping and backtest-overfitting controls explicitly specified.
 - Manual GitHub Actions workflow added.
 
-## Empirical gate
-Phase 4 cannot honestly produce stock-level profitability results until licensed/validated market data covering the required horizons are available and their schemas/corporate-action rules are frozen.
+## Empirical limitation
+No licensed/validated market dataset covering the required scalping/intraday/BTST/swing horizons is currently present in the repository. Therefore no empirical return, Sharpe, p-value, confidence interval, or profitability classification is reported.

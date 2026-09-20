@@ -3,24 +3,15 @@
 Research project studying whether Monte Carlo methods can improve the statistical validation and/or decision support of stock-trading systems across scalping, intraday, BTST and swing horizons.
 
 ## Current status
-**Phase 3 — Baselines and Monte Carlo methodology: complete. Phase 4: blocked pending validated market data.**
+**Phase 4 statistical design complete; empirical execution blocked by market-data access.**
 
-Protocol, literature/data audit, cost engine, canonical data schema, baseline signals, Monte Carlo resamplers, tests and manual workflows are now in the repository. No stock-level profitability result has been fabricated.
+Protocol, literature review, data/cost framework, baselines, Monte Carlo methods, statistical plan and manual workflows are in the repository. No stock-level profitability result has been fabricated.
 
-## Research question
-Can Monte Carlo methods be used as a statistically defensible component of trading systems for Indian equities across scalping, intraday, BTST and swing horizons, while remaining economically profitable after realistic brokerage, statutory charges, spread, slippage and execution frictions?
-
-## Key finding so far
-The evidence supports Monte Carlo mainly as a validation, resampling, uncertainty and risk framework. It is not evidence of guaranteed alpha. Robust profitability must be demonstrated with net out-of-sample data and multiple-testing controls.
+## Conclusion so far
+Monte Carlo has a defensible role as a resampling, uncertainty, null-testing and risk-analysis layer. It is not evidence of guaranteed trading alpha. A profitability claim requires net out-of-sample market data, data-snooping controls and realistic execution costs.
 
 ## Phase progress
-- Phase 0: complete
-- Phase 1: complete
-- Phase 2: partially complete; empirical high-resolution data access pending
-- Phase 3: complete
-- Phase 4: blocked pending validated market data
-- Phase 5: pending
-- Phase 6: pending
+Phase 0 complete; Phase 1 complete; Phase 2 partially complete; Phase 3 complete; Phase 4 design complete but data-gated; Phase 5 not executed; Phase 6 pending.
 
 ## Key files
-RESEARCH_PROTOCOL.md; docs/RESEARCH_PLAN.md; docs/STATUS_PHASES.md; docs/LITERATURE_REVIEW.md; docs/DATA_SCHEMA.md; docs/DATA_ACQUISITION_MANIFEST.md; docs/COST_MODEL_2026.md; docs/PHASE3_METHODS.md; research_cost_engine.py; research_baselines.py; research_monte_carlo.py; test_cost_engine.py; test_monte_carlo.py
+RESEARCH_PROTOCOL.md; docs/RESEARCH_PLAN.md; docs/STATUS_PHASES.md; docs/LITERATURE_REVIEW.md; docs/DATA_SCHEMA.md; docs/COST_MODEL_2026.md; docs/PHASE3_METHODS.md; docs/PHASE4_STATISTICAL_PLAN.md; research_cost_engine.py; research_monte_carlo.py; research_statistics.py; tests.
