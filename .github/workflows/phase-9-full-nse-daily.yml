@@ -19,7 +19,7 @@ jobs:
           path: .cache/phase9daily
           key: phase9-daily-marketdata-v1
       - name: Install dependencies
-        run: pip install -U numpy pandas pyarrow statsmodels
+        run: pip install -U numpy pandas pyarrow statsmodels huggingface_hub
       - name: Download TejHQ NSE and BSE parquet
         run: |
           python - <<'PY'
