@@ -16,3 +16,8 @@
 | P9-E011 | corrected | The first 2026-only forward wrapper passed `--tej-root` to a copied script that did not declare the argument. | Added the argument and retained the already-acquired 2026 dataset; no empirical result from the failed run is accepted. |
 | P9-E008 | corrected | Ganesh Nifty500 workflow manifest omitted the `os` import. | Added the import before regenerating the matrix. |
 | P9-E009 | corrected | Ganesh shard analysis assumed the daily resample index was unnamed; the files carried a `ts` index name, causing `date` selection failures. | Reset the index and rename the actual first index column to `date`; discard all affected shard results. |
+
+| P9-E011 | corrected | Run 6 aggregate failed with KeyError: mc_return although shard signal_panel.csv used mc_ret. | Aggregator changed to consume mc_ret; previous aggregate is non-authoritative and must not be used as final evidence. |
+| P9-E012 | corrected | Raw Ganesh 1-minute data contained obvious corporate-action scale breaks that produced impossible trade returns in affected symbols. | Added deterministic split/consolidation scale normalization before indicator/resampling; ambiguous breaks are logged/excluded. |
+| P9-E013 | corrected | MC gate history was updated only from accepted MC trades, making the MC comparison self-referential and capable of suppressing all later trades. | MC gate now uses completed baseline trade returns as the historical distribution and tracks MC equity separately. |
+| P9-E014 | corrected | Short-horizon loop could create overlapping candidate positions before the previous position exited. | Candidate generation now advances past each exit and enforces one position at a time per symbol. |
