@@ -4,11 +4,14 @@ Started: 2026-09-20
 
 - Repository re-read: COMPLETE
 - Public data discovery: COMPLETE
-- Direct readable empirical dataset: PARTIAL (RELIANCE 15m/daily confirmed)
-- Multi-symbol empirical run: PENDING
-- Statistical inference: PENDING
-- Robustness: PENDING
-- Strategy freeze: PENDING
+- Direct readable empirical dataset: COMPLETE for RELIANCE 15m/daily
+- Initial exploratory simulator: INVALIDATED due accounting bug
+- Bug diagnosis: COMPLETE
+- Corrected engine specification: COMPLETE
+- Corrected multi-horizon empirical run: IN PROGRESS
+- Statistical inference: NOT STARTED on valid results
+- Robustness: NOT STARTED on valid results
+- Strategy freeze: NOT STARTED
 
-## Current blocker
-The GitHub connector can read moderate-sized CSVs but cannot directly materialize several multi-million-row files. The research will therefore use readable datasets first and will not claim multi-symbol confirmation until it is actually executed.
+## Important
+The first numerical result was rejected and must not be used as evidence. The study continues from the corrected engine specification.
