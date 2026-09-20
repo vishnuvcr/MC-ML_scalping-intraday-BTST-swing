@@ -1,0 +1,50 @@
+name: Phase 8 Public Data Expansion
+
+on:
+  push:
+    branches: [phase-8-public-data-expansion]
+  workflow_dispatch:
+    inputs:
+      force_refresh:
+        description: Refresh cached public datasets
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  screen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      SYMBOLS: TCS RELIANCE HDFCBANK INFY ICICIBANK SBIN AXISBANK BHARTIARTL KOTAKBANK ITC LT HCLTECH BAJFINANCE MARUTI HINDUNILVR SUNPHARMA TATASTEEL ADANIPORTS NTPC ONGC
+      FNO_URL: https://github.com/voletiramu/nse-fno-1min-data/releases/download/v1.0.0/stocks_1m_csvs.zip
+      FNO_SHA256: 20024713c455cc16b5daae91e06991d57a1acfa6a30c77bb7d5a742ee1789ab2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/cache@v4
+        with:
+          path: .cache/phase8
+          key: phase8-public-data-v1
+      - run: mkdir -p .cache/phase8/tejhq raw/fno raw/tejhq research_results/phase8
+      - name: Get minute dataset
+        run: |
+          if [ ! -f .cache/phase8/stocks_1m_csvs.zip ] || [ "${{ inputs.force_refresh }}" = "true" ]; then curl -L --fail --retry 3 -o .cache/phase8/stocks_1m_csvs.zip "$FNO_URL"; fi
+          echo "$FNO_SHA256  .cache/phase8/stocks_1m_csvs.zip" | sha256sum -c -
+      - name: Extract selected symbols
+        run: |
+          for s in $SYMBOLS; do unzip -j -o .cache/phase8/stocks_1m_csvs.zip "*$s*.csv" "*$s*.csv.gz" -d raw/fno >/dev/null 2>&1 || true; done
+      - name: Get daily dataset
+        run: |
+          for s in $SYMBOLS; do curl -L --fail --retry 3 -o .cache/phase8/tejhq/$s.json "https://api.tejhq.dev/v1/ohlcv/nse/$s?from=2018-01-01&to=2026-09-18"; cp .cache/phase8/tejhq/$s.json raw/tejhq/$s.json; done
+      - name: Install dependencies
+        run: pip install numpy pandas matplotlib
+      - name: Run frozen screen
+        run: python scripts/phase8_public_data_screen.py --hf-root raw/fno --daily-root raw/tejhq --out research_results/phase8 --symbols "$(echo "$SYMBOLS" | tr ' ' ',')"
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase8-public-data-results
+          path: research_results/phase8
