@@ -1,0 +1,20 @@
+name: Phase 0 - Governance
+
+on:
+  workflow_dispatch:
+
+jobs:
+  governance-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Repository consistency check
+        run: |
+          test -f RESEARCH_PROTOCOL.md
+          test -f RESEARCH_PLAN.md || test -f docs/RESEARCH_PLAN.md
+          test -f docs/RESEARCH_QUESTIONS.md
+          test -f docs/ERROR_LOG.md
+          test -f docs/CHAT_LOG.md
+          test -f docs/STATUS_PHASES.md
+          echo "Phase 0 governance files present."
