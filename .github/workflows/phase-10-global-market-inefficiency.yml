@@ -9,19 +9,12 @@ on:
     branches: [phase-10-global-market-inefficiency]
   workflow_dispatch:
     inputs:
-      mode:
-        description: "Run pilot only or join a Phase 9 trade panel"
-        required: true
-        default: "pilot"
-        type: choice
-        options:
-          - pilot
-          - oos
       refresh_data:
         description: "Refresh Yahoo/yfinance global data instead of using runner cache"
         required: true
         default: false
         type: boolean
+
 jobs:
   phase10:
     runs-on: ubuntu-latest
@@ -36,7 +29,24 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: .cache/phase10-global
-          key: phase10-global-v1-\${{ hashFiles('config/phase10_global_tickers.txt') }}
+          key: phase10-global-v1-${{ hashFiles('config/phase10_global_tickers.txt') }}
 
       - name: Install dependencies
         run: pip install -U yfinance pandas numpy
+
+      - name: Run global-market pilot
+        env:
+          REFRESH: ${{ inputs.refresh_data }}
+        run: |
+          mkdir -p results/phase10
+          args=(--global-dir .cache/phase10-global --out results/phase10 --download)
+          if [ "$REFRESH" = "true" ]; then
+            args+=(--refresh)
+          fi
+          python scripts/phase10_global_market_filters.py "${args[@]}"
+
+      - name: Upload Phase 10 results
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase10-global-market-results
+          path: results/phase10
