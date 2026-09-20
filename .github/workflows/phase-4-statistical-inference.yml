@@ -1,0 +1,23 @@
+name: Phase 4 - Statistical Inference
+
+on:
+  workflow_dispatch:
+
+jobs:
+  statistics:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install test dependencies
+        run: python -m pip install --upgrade pip pytest numpy
+      - name: Run statistical utility tests
+        run: python -m pytest -q test_statistics.py
+      - name: Check empirical gate
+        run: |
+          test -f docs/PHASE4_STATISTICAL_PLAN.md
+          echo "Statistical plan ready; empirical execution requires validated market data."
