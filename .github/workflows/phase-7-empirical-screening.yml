@@ -1,0 +1,18 @@
+name: Phase 7 - Empirical Screening
+
+on:
+  workflow_dispatch:
+
+jobs:
+  empirical-screen:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Check empirical result artifacts
+        run: |
+          test -f docs/EMPIRICAL_SCREENING_RESULTS.md
+          test -f docs/STATUS_PHASES.md
+          test -f docs/ERROR_LOG.md
+          test -f manuscript/FINAL_RESEARCH_REPORT.md
+          echo "Phase 7 empirical screening artifacts present."
