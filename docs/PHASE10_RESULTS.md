@@ -38,3 +38,13 @@ These observations invalidate that aggregate as final strategy evidence. A corre
 Current Phase 10 status: NO GLOBAL FILTER PROMOTED.
 
 The useful result at this stage is that global lead/lag is empirically detectable in long historical samples, but current forward evidence is insufficient to claim a stable profitable edge. The next decisive test is the frozen global filter applied to the corrected Phase 9 trade engine with 2026 forward data and full cost accounting.
+
+## 4. Effect-size / significance check on the independent pilot
+
+For the SENSEX pilot, the high-consensus (>= +3) versus low-consensus (<= -3) mean-return difference was:
+
+- Train: +0.377 percentage points, Welch t ≈ 6.42.
+- Validation: +0.236 percentage points, Welch t ≈ 2.01.
+- 2026 synchronized sample: -0.154 percentage points, Welch t ≈ -0.40, with only 11 high-consensus and 2 low-consensus observations.
+
+These calculations are descriptive split-sample diagnostics, not proof of a tradable strategy. The very small 2026 low-consensus sample makes the test-period comparison particularly unstable.
