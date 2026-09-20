@@ -1,10 +1,12 @@
 name: Phase 9 NSE Universe, Selection and Regime Analysis
 
+concurrency:
+  group: phase9-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     branches: [phase-9-universe-selection-regime]
-  pull_request:
-    branches: [main]
   workflow_dispatch:
     inputs:
       force_refresh:
