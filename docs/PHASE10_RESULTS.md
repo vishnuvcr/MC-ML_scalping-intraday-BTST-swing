@@ -48,3 +48,7 @@ For the SENSEX pilot, the high-consensus (>= +3) versus low-consensus (<= -3) me
 - 2026 synchronized sample: -0.154 percentage points, Welch t ≈ -0.40, with only 11 high-consensus and 2 low-consensus observations.
 
 These calculations are descriptive split-sample diagnostics, not proof of a tradable strategy. The very small 2026 low-consensus sample makes the test-period comparison particularly unstable.
+
+## Execution status — 20 Sep 2026
+
+The first Phase 10 Actions runs failed in the OOS artifact-download path because the workflow expression was malformed and the pilot path did not need that artifact. This was an infrastructure failure, not a market-data result. The workflow has been simplified to a deterministic pilot-only run; OOS joining is intentionally deferred until the corrected Phase 9 authoritative artifact exists.
