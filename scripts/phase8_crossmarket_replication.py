@@ -129,7 +129,7 @@ def backtest(rows, symbol, horizon, friction_bps, use_mc, test_start, test_end):
         if not all(math.isfinite(x) for x in (e20[i],e21[i],a[i])): continue
         up=e20[i]>e21[i] and e20[i-1]<=e21[i-1]
         if not up: continue
-        if use_mc and not mc_gate(history, (hash(symbol+horizon)&0xffffffff)):
+        if use_mc and not mc_gate(history, (zlib.crc32((symbol+horizon).encode()) & 0xffffffff)):
             continue
         entry=rows[i+1]["open"]
         qty=int(math.floor(equity/entry))
