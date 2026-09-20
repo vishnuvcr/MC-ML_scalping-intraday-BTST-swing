@@ -21,7 +21,7 @@ def parse_intraday(p):
     dt=cols.get('datetime') or cols.get('timestamp') or cols.get('date')
     rename={cols[x]:x for x in ['open','high','low','close','volume'] if x in cols}
     df=df.rename(columns=rename)
-    parsed=pd.to_datetime(df[dt],errors='coerce')
+    parsed=pd.to_datetime(df[dt],unit='s',errors='coerce') if dt == cols.get('time') and pd.api.types.is_numeric_dtype(df[dt]) else pd.to_datetime(df[dt],errors='coerce')
     if parsed.dt.tz is None: parsed=parsed.dt.tz_localize('Asia/Kolkata')
     else: parsed=parsed.dt.tz_convert('Asia/Kolkata')
     df['ts']=parsed
