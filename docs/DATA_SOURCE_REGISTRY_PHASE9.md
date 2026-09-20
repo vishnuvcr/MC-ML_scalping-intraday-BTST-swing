@@ -50,3 +50,11 @@ The two repositories will be treated as a continuous broad intraday panel: 2018â
 
 ### Regime inputs
 The Ganesh data include NIFTY50-INDEX, NIFTYBANK, FINNIFTY-INDEX and MIDCPNIFTY-INDEX files, enabling market-regime and cross-sectional benchmark variables directly inside the same intraday source family.
+
+## Phase 9 global markets â€” added 2026-09-20
+
+Global daily benchmarks are retrieved with yfinance from Yahoo Finance public APIs for research and educational analysis. The active tickers are S&P 500 (^GSPC), Nasdaq 100 (^NDX), FTSE 100 (^FTSE), DAX (^GDAXI), Nikkei 225 (^N225), Hang Seng (^HSI), KOSPI (^KS11), Shanghai Composite (000001.SS), VIX (^VIX), DXY (DX-Y.NYB), USD/INR (INR=X), WTI (CL=F) and gold (GC=F).
+
+Raw global downloads are runner-only. The yfinance project documentation states that it is not affiliated with Yahoo Finance, is intended for research and educational use, and that actual downloaded data are governed by Yahoo terms. Source: https://ranaroussi.github.io/yfinance/
+
+Alignment is strictly lagged to the Indian signal date to avoid time-zone leakage.
