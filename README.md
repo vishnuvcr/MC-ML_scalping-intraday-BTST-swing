@@ -3,7 +3,9 @@
 Research project studying whether Monte Carlo methods can improve the statistical validation and/or decision support of stock-trading systems across scalping, intraday, BTST and swing horizons.
 
 ## Current status
-**Phase 7 empirical screen complete — no universally robust strategy found.**
+**Phase 8 public-data expansion in progress — no universally robust strategy has been established.**
+
+Public Kaggle, Hugging Face, TejHQ and GitHub sources are now part of the protocol. The corrected interim 8-symbol screen is negative for the frozen EMA framework at 5 bps/leg; the independent 214-symbol 1-minute + TejHQ daily run is configured for cached GitHub Actions execution.
 
 The empirical gate was reopened with a secondary public OHLCV dataset. The research then ran a finite strategy screen with transaction costs, brokerage assumptions and Monte Carlo gating. The screen was closed after the pre-specified candidate families failed to produce a robust positive strategy across all four horizons.
 
@@ -32,3 +34,12 @@ No single consistent, cost-aware and out-of-sample-robust strategy has been esta
 - `research_monte_carlo.py`
 - `research_cost_engine.py`
 - `.github/workflows/phase-0-governance.yml` through `.github/workflows/phase-6-final-synthesis.yml`
+
+
+## Phase 8 public-data expansion
+- `docs/PHASE8_PUBLIC_DATA_PLAN.md` (phase-8-public-data-expansion)
+- `docs/DATA_SOURCE_REGISTRY_PHASE8.md`
+- `docs/PHASE8_RESULTS.md`
+- `docs/ERROR_LOG_PHASE8.md`
+- `scripts/phase8_public_data_screen.py`
+- `.github/workflows/phase-8-public-data-expansion.yml`
