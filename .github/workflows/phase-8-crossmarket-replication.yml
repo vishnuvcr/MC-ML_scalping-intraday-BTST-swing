@@ -1,0 +1,21 @@
+name: Phase 8 Cross-Market Replication
+on:
+  push:
+    branches: [phase-8-crossmarket-replication]
+  workflow_dispatch:
+jobs:
+  replication:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Run corrected cross-market replication
+        run: python scripts/phase8_crossmarket_replication.py
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase8-crossmarket-results
+          path: research_results/phase8_crossmarket
